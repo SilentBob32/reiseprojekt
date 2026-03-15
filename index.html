@@ -5,26 +5,31 @@
 <meta charset="UTF-8">
 <title>Reiseprojekt Bildpool</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:10px}
+
 .card {background:#fafafa;padding:8px;border-radius:8px;position:relative;border:2px solid transparent}
-.card.top {border:2px solid gold}
 .card img {width:100%;height:130px;object-fit:cover;border-radius:6px;cursor:pointer}
 .remove {position:absolute;top:4px;right:6px;color:#b22222;font-weight:bold;cursor:pointer}
+
 .rating span {cursor:pointer;font-size:20px}
 .ratingDisplay {font-size:12px;margin-top:4px}
 .actions {margin-top:6px;font-size:14px;color:black}
+
 .icon {color:#bbb;font-size:16px;margin-right:6px}
 .icon.active-fav {color:gold}
 .icon.active-panorama {color:#2a7cff}
+
+.debug {margin-top:6px;font-size:11px;color:#555;background:#eee;padding:4px;border-radius:4px}
+
 #preview {display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;z-index:999999}
 #preview img {max-width:90vw;max-height:90vh}
-body.preview-open {overflow:hidden}
+
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
-#currentUser {margin-bottom:20px;font-weight:bold}
 </style>
 </head>
 
@@ -78,39 +83,25 @@ async function setUser(){
  userId=uid
  localStorage.setItem("reise_user",uid)
 
- showUser()
+ document.getElementById("userSelect").style.display="none"
  init()
 }
 
-function changeUser(){
- localStorage.removeItem("reise_user")
- localStorage.removeItem("reise_user_name")
- location.reload()
-}
-
-function showUser(){
- document.getElementById("userSelect").style.display="none"
- document.getElementById("currentUser").innerHTML =
- "Angemeldet als: "+userName+" <button onclick='changeUser()'>Nutzer wechseln</button>"
-}
-
 function openPreview(src){
- document.body.classList.add("preview-open")
  document.getElementById("previewimg").src=src
  document.getElementById("preview").style.display="flex"
 }
 
 document.addEventListener("click",e=>{
- if(e.target.id==="preview"){
-   document.getElementById("preview").style.display="none"
-   document.body.classList.remove("preview-open")
- }
+ if(e.target.id==="preview") document.getElementById("preview").style.display="none"
 })
 
 async function loadImages(place){
+
  const {data:images} = await supabaseClient.from("bilder").select("*").eq("ort",place)
  const container=document.getElementById(place+"_list")
  container.innerHTML=""
+
  if(!images) return
 
  for (const img of images){
@@ -125,23 +116,8 @@ async function loadImages(place){
    const isPanorama = myEntry && myEntry.panorama === true
    const myRating = myEntry ? myEntry.rating : 0
 
-   let avg=0
-   const valid = imgRatings.filter(r=>r.rating)
-   if(valid.length) avg = valid.reduce((a,b)=>a+b.rating,0)/valid.length
-
    const card=document.createElement("div")
    card.className="card"
-
-   const remove=document.createElement("div")
-   remove.className="remove"
-   remove.textContent="✕"
-
-   remove.onclick=async()=>{
-     if(!confirm("Bild wirklich löschen?")) return
-     await supabaseClient.from("bewertungen").delete().eq("bild_id",img.id)
-     await supabaseClient.from("bilder").delete().eq("id",img.id)
-     loadImages(place)
-   }
 
    const image=document.createElement("img")
    image.src=img.url
@@ -152,87 +128,37 @@ async function loadImages(place){
    for(let i=1;i<=5;i++){
      const star=document.createElement("span")
      star.textContent = myRating>=i ? "★":"☆"
-
-     star.onclick=async()=>{
-       if(myEntry){
-         await supabaseClient.from("bewertungen")
-           .update({rating:i})
-           .eq("bild_id",img.id)
-           .eq("nutzer_id",userId)
-       }else{
-         await supabaseClient.from("bewertungen")
-           .insert({bild_id:img.id,nutzer_id:userId,rating:i})
-       }
-       loadImages(place)
-     }
      ratingDiv.appendChild(star)
    }
-
-   const ratingInfo=document.createElement("div")
-   ratingInfo.className="ratingDisplay"
-   ratingInfo.textContent="Ø "+avg.toFixed(1)+" ("+valid.length+" Bewertungen)"
 
    const actions=document.createElement("div")
    actions.className="actions"
 
-   const fav=document.createElement("span")
    const favIcon=document.createElement("span")
    favIcon.className="icon "+(isFavorite ? "active-fav":"")
    favIcon.textContent="⭐"
-   fav.appendChild(favIcon)
-   fav.append(" Favorit")
+   actions.appendChild(favIcon)
+   actions.append(" Favorit  ")
 
-   fav.onclick=async()=>{
-     if(myEntry){
-       await supabaseClient.from("bewertungen")
-         .update({favorite:!isFavorite})
-         .eq("bild_id",img.id)
-         .eq("nutzer_id",userId)
-     }else{
-       await supabaseClient.from("bewertungen")
-         .insert({bild_id:img.id,nutzer_id:userId,favorite:true})
-     }
-     loadImages(place)
-   }
-
-   const pano=document.createElement("span")
    const panoIcon=document.createElement("span")
    panoIcon.className="icon "+(isPanorama ? "active-panorama":"")
    panoIcon.textContent="🌄"
-   pano.appendChild(panoIcon)
-   pano.append(" Panorama")
+   actions.appendChild(panoIcon)
+   actions.append(" Panorama")
 
-   pano.onclick=async()=>{
-     const placeImages = images.map(i=>i.id)
+   const debug=document.createElement("div")
+   debug.className="debug"
+   debug.textContent="rating: "+myRating+" | favorite: "+isFavorite+" | panorama: "+isPanorama
 
-     await supabaseClient.from("bewertungen")
-       .update({panorama:false})
-       .eq("nutzer_id",userId)
-       .in("bild_id",placeImages)
-
-     if(myEntry){
-       await supabaseClient.from("bewertungen")
-         .update({panorama:true})
-         .eq("bild_id",img.id)
-         .eq("nutzer_id",userId)
-     }else{
-       await supabaseClient.from("bewertungen")
-         .insert({bild_id:img.id,nutzer_id:userId,panorama:true})
-     }
-     loadImages(place)
-   }
-
-   actions.appendChild(fav)
-   actions.appendChild(pano)
-
-   card.appendChild(remove)
    card.appendChild(image)
    card.appendChild(ratingDiv)
-   card.appendChild(ratingInfo)
    card.appendChild(actions)
+   card.appendChild(debug)
 
    container.appendChild(card)
-  }
+
+ }
+
 }
 
 async function addImage(place){
@@ -254,35 +180,24 @@ function registerButtons(){
 function init(){ places.forEach(p=>loadImages(p)) }
 
 document.addEventListener("DOMContentLoaded",()=>{
+
  populateUsers()
  registerButtons()
  document.getElementById("confirmUser").onclick=setUser
 
  if(userId && userName){
-   showUser()
+
+   document.getElementById("userSelect").style.display="none"
    init()
+
  }
+
 })
 
 </script>
 
 <details>
 <summary>Salzburg</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/salzburg1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/salzburg2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/salzburg3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/salzburg4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/salzburg5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=salzburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/salzburg/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="salzburg_input" placeholder="Bildlink einfügen">
@@ -296,21 +211,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Hamburg</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/hamburg1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/hamburg2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/hamburg3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/hamburg4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/hamburg5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=hamburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/hamburg/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="hamburg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="hamburg">Hinzufügen</button>
@@ -322,21 +222,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Bratislava</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/bratislava1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/bratislava2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bratislava3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bratislava4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bratislava5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=bratislava&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/bratislava/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="bratislava_input" placeholder="Bildlink einfügen">
@@ -350,21 +235,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Karlsbad</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/karlsbad1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/karlsbad2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/karlsbad3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/karlsbad4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/karlsbad5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=karlsbad&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/karlsbad/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="karlsbad_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="karlsbad">Hinzufügen</button>
@@ -376,21 +246,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Bad Flinsberg</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=bad%20flinsberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/bad%20flinsberg/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="bad_flinsberg_input" placeholder="Bildlink einfügen">
@@ -404,21 +259,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Kirschau</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/kirschau1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/kirschau2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/kirschau3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/kirschau4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/kirschau5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=kirschau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/kirschau/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="kirschau_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="kirschau">Hinzufügen</button>
@@ -430,21 +270,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Bad Staffelstein</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=bad%20staffelstein&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/bad%20staffelstein/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="bad_staffelstein_input" placeholder="Bildlink einfügen">
@@ -458,21 +283,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Weimar</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/weimar1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/weimar2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/weimar3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/weimar4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/weimar5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=weimar&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/weimar/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="weimar_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="weimar">Hinzufügen</button>
@@ -484,21 +294,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Erfurt</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/erfurt1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/erfurt2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/erfurt3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/erfurt4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/erfurt5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=erfurt&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/erfurt/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="erfurt_input" placeholder="Bildlink einfügen">
@@ -512,21 +307,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Dresden</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/dresden1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/dresden2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/dresden3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/dresden4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/dresden5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=dresden&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/dresden/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="dresden_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="dresden">Hinzufügen</button>
@@ -538,21 +318,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Breslau</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/breslau1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/breslau2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/breslau3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/breslau4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/breslau5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=breslau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/breslau/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="breslau_input" placeholder="Bildlink einfügen">
@@ -566,21 +331,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Prag</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/prag1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/prag2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/prag3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/prag4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/prag5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=prag&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/prag/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="prag_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="prag">Hinzufügen</button>
@@ -593,21 +343,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Nuernberg</summary>
 
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/nuernberg1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/nuernberg2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/nuernberg3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/nuernberg4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/nuernberg5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=nuernberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/nuernberg/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
-
 <div>
 <input id="nuernberg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="nuernberg">Hinzufügen</button>
@@ -619,21 +354,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Wien</summary>
-
-<div class="grid">
-<div class="card"><img src="https://picsum.photos/seed/wien1/640/360"></div>
-<div class="card"><img src="https://picsum.photos/seed/wien2/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/wien3/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/wien4/320/240"></div>
-<div class="card"><img src="https://picsum.photos/seed/wien5/320/240"></div>
-</div>
-
-<div>
-<a href="https://commons.wikimedia.org/w/index.php?search=wien&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder</a> |
-<a href="https://www.pexels.com/search/wien/" target="_blank">Pexels Bilder</a>
-</div>
-
-<br>
 
 <div>
 <input id="wien_input" placeholder="Bildlink einfügen">
