@@ -11,16 +11,46 @@
 body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
+
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:10px}
-.card {background:#fafafa;padding:6px;border-radius:6px;position:relative}
+
+.card {background:#fafafa;padding:6px;border-radius:6px;position:relative;border:2px solid transparent}
+
+.card.top {border:2px solid gold}
+
 .card img {width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer}
-.remove {position:absolute;top:4px;right:6px;color:#b22222;cursor:pointer}
+
+.remove {position:absolute;top:4px;right:6px;color:#b22222;cursor:pointer;font-weight:bold}
+
+.rating span {cursor:pointer;font-size:16px}
+
+.ratingDisplay {font-size:12px;margin-top:4px}
+
 input {width:65%;padding:6px}
 button {padding:6px 10px;margin-left:6px}
-#preview {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);align-items:center;justify-content:center}
-#preview img {max-width:90%;max-height:90%}
+
+#preview {
+ display:none;
+ position:fixed;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.9);
+ align-items:center;
+ justify-content:center;
+ z-index:9999;
+}
+
+#preview img {
+ max-width:90%;
+ max-height:90%;
+ z-index:10000;
+}
+
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
 #currentUser {margin-bottom:20px;font-weight:bold}
+
 </style>
 </head>
 
@@ -51,99 +81,135 @@ const users = ["Jens", "Simone", "Stephan", "Steffen", "Nobody1", "Nobody2", "No
 let userId = localStorage.getItem("reise_user")
 let userName = localStorage.getItem("reise_user_name")
 
-function populateUsers() {
- const dd = document.getElementById("userDropdown")
- dd.innerHTML = ""
- users.forEach(name => {
-   const opt = document.createElement("option")
-   opt.value = name
-   opt.textContent = name
+function populateUsers(){
+ const dd=document.getElementById("userDropdown")
+ dd.innerHTML=""
+ users.forEach(n=>{
+   const opt=document.createElement("option")
+   opt.value=n
+   opt.textContent=n
    dd.appendChild(opt)
  })
 }
 
-async function setUser() {
- const name = document.getElementById("userDropdown").value
- userName = name
- localStorage.setItem("reise_user_name", name)
+async function setUser(){
+ const name=document.getElementById("userDropdown").value
+ userName=name
+ localStorage.setItem("reise_user_name",name)
 
- const { data } = await supabaseClient
+ const {data} = await supabaseClient
    .from("nutzer")
    .select("*")
-   .eq("name", name)
+   .eq("name",name)
    .maybeSingle()
 
  let uid
 
- if (data) {
-   uid = data.id
- } else {
-   const { data: ins } = await supabaseClient
-      .from("nutzer")
-      .insert({ name: name })
-      .select()
-      .single()
-   uid = ins.id
+ if(data){
+   uid=data.id
+ }else{
+   const {data:ins} = await supabaseClient
+     .from("nutzer")
+     .insert({name:name})
+     .select()
+     .single()
+   uid=ins.id
  }
 
- userId = uid
- localStorage.setItem("reise_user", uid)
+ userId=uid
+ localStorage.setItem("reise_user",uid)
 
- document.getElementById("userSelect").style.display = "none"
- document.getElementById("currentUser").textContent = "Angemeldet als: " + userName
+ document.getElementById("userSelect").style.display="none"
+ document.getElementById("currentUser").textContent="Angemeldet als: "+userName
+
  init()
 }
 
-function registerButtons(){
- document.querySelectorAll(".addbtn").forEach(btn => {
-  btn.addEventListener("click", () => addImage(btn.dataset.place))
- })
+function openPreview(src){
+ const p=document.getElementById("preview")
+ document.getElementById("previewimg").src=src
+ p.style.display="flex"
 }
 
-function openPreview(src) {
- const p = document.getElementById("preview")
- document.getElementById("previewimg").src = src
- p.style.display = "flex"
-}
-
-document.addEventListener("click", e => {
- if (e.target.id === "preview") {
-   document.getElementById("preview").style.display = "none"
- }
+document.addEventListener("click",e=>{
+ if(e.target.id==="preview") document.getElementById("preview").style.display="none"
 })
 
-async function loadImages(place) {
+async function loadImages(place){
 
- const { data } = await supabaseClient
-   .from("bilder")
+ const {data:images} = await supabaseClient
+  .from("bilder")
+  .select("*")
+  .eq("ort",place)
+
+ const container=document.getElementById(place+"_list")
+ container.innerHTML=""
+
+ if(!images) return
+
+ const ids = images.map(i=>i.id)
+
+ const {data:ratings} = await supabaseClient
+   .from("bewertungen")
    .select("*")
-   .eq("ort", place)
+   .in("bild_id",ids.length?ids:[0])
 
- const container = document.getElementById(place + "_list")
- container.innerHTML = ""
+ images.forEach(img=>{
 
- if(!data) return
+   const card=document.createElement("div")
+   card.className="card"
 
- data.forEach(img => {
+   const remove=document.createElement("div")
+   remove.className="remove"
+   remove.textContent="✕"
 
-   const card = document.createElement("div")
-   card.className = "card"
-
-   const remove = document.createElement("div")
-   remove.className = "remove"
-   remove.textContent = "✕"
-
-   remove.onclick = async () => {
-     await supabaseClient.from("bilder").delete().eq("id", img.id)
+   remove.onclick=async()=>{
+     await supabaseClient.from("bilder").delete().eq("id",img.id)
      loadImages(place)
    }
 
-   const image = document.createElement("img")
-   image.src = img.url
-   image.onclick = () => openPreview(img.url)
+   const image=document.createElement("img")
+   image.src=img.url
+   image.onclick=()=>openPreview(img.url)
+
+   const ratingDiv=document.createElement("div")
+   ratingDiv.className="rating"
+
+   const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
+
+   let avg=0
+   if(imgRatings.length){
+     avg = imgRatings.reduce((a,b)=>a+(b.rating||0),0)/imgRatings.length
+   }
+
+   const myRating = imgRatings.find(r=>r.nutzer_id===userId)
+
+   for(let i=1;i<=5;i++){
+     const star=document.createElement("span")
+     star.textContent = myRating && myRating.rating>=i ? "★":"☆"
+
+     star.onclick=async()=>{
+       await supabaseClient.from("bewertungen").upsert({
+         bild_id:img.id,
+         nutzer_id:userId,
+         rating:i
+       })
+       loadImages(place)
+     }
+
+     ratingDiv.appendChild(star)
+   }
+
+   const ratingInfo=document.createElement("div")
+   ratingInfo.className="ratingDisplay"
+   ratingInfo.textContent = "Ø "+avg.toFixed(1)+" ("+imgRatings.length+" Bewertungen)"
+
+   if(avg>=4) card.classList.add("top")
 
    card.appendChild(remove)
    card.appendChild(image)
+   card.appendChild(ratingDiv)
+   card.appendChild(ratingInfo)
 
    container.appendChild(card)
 
@@ -151,38 +217,54 @@ async function loadImages(place) {
 
 }
 
-async function addImage(place) {
+async function addImage(place){
 
- const input = document.getElementById(place + "_input")
- const url = input.value.trim()
-
- if (!url) return
+ const input=document.getElementById(place+"_input")
+ const url=input.value.trim()
+ if(!url) return
 
  await supabaseClient.from("bilder").insert({
-  ort: place,
-  url: url
+  ort:place,
+  url:url
  })
 
- input.value = ""
+ input.value=""
  loadImages(place)
 }
 
-function init() {
- places.forEach(p => loadImages(p))
+function registerButtons(){
+ document.querySelectorAll(".addbtn").forEach(btn=>{
+  btn.addEventListener("click",()=>addImage(btn.dataset.place))
+ })
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function init(){
+ places.forEach(p=>loadImages(p))
+}
+
+function enableRealtime(){
+ supabaseClient
+  .channel('bilder-live')
+  .on('postgres_changes', {event:'*', schema:'public', table:'bilder'}, payload=>{
+     places.forEach(p=>loadImages(p))
+  })
+  .subscribe()
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
 
  populateUsers()
  registerButtons()
 
- document.getElementById("confirmUser").addEventListener("click", setUser)
+ document.getElementById("confirmUser").addEventListener("click",setUser)
 
- if (userId && userName) {
-   document.getElementById("userSelect").style.display = "none"
-   document.getElementById("currentUser").textContent = "Angemeldet als: " + userName
+ if(userId && userName){
+   document.getElementById("userSelect").style.display="none"
+   document.getElementById("currentUser").textContent="Angemeldet als: "+userName
    init()
  }
+
+ enableRealtime()
 
 })
 
@@ -192,11 +274,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Salzburg</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/salzburg?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg5/320/240"></div>
 </div>
 
 <div>
@@ -219,11 +301,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Hamburg</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/hamburg?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg5/320/240"></div>
 </div>
 
 <div>
@@ -246,11 +328,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Bratislava</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/bratislava?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava5/320/240"></div>
 </div>
 
 <div>
@@ -273,11 +355,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Karlsbad</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/karlsbad?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad5/320/240"></div>
 </div>
 
 <div>
@@ -300,11 +382,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Bad Flinsberg</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/bad%20flinsberg?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg5/320/240"></div>
 </div>
 
 <div>
@@ -327,11 +409,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Kirschau</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/kirschau?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau5/320/240"></div>
 </div>
 
 <div>
@@ -354,11 +436,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Bad Staffelstein</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/bad%20staffelstein?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein5/320/240"></div>
 </div>
 
 <div>
@@ -381,11 +463,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Weimar</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/weimar?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar5/320/240"></div>
 </div>
 
 <div>
@@ -408,11 +490,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Erfurt</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/erfurt?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt5/320/240"></div>
 </div>
 
 <div>
@@ -435,11 +517,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Dresden</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/dresden?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden5/320/240"></div>
 </div>
 
 <div>
@@ -462,11 +544,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Breslau</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/breslau?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau5/320/240"></div>
 </div>
 
 <div>
@@ -489,11 +571,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Prag</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/prag?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag5/320/240"></div>
 </div>
 
 <div>
@@ -516,11 +598,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Nuernberg</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/nuernberg?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg5/320/240"></div>
 </div>
 
 <div>
@@ -543,11 +625,11 @@ document.addEventListener("DOMContentLoaded", () => {
 <summary>Wien</summary>
 
 <div class="grid">
-<div class="card"><img src="https://loremflickr.com/640/360/wien?lock=1"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=2"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=3"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=4"></div>
-<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=5"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien5/320/240"></div>
 </div>
 
 <div>
