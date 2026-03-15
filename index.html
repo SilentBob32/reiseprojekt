@@ -4,52 +4,53 @@
 <head>
 <meta charset="UTF-8">
 <title>Reiseprojekt Bildpool</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
+
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:10px}
 
 .card {background:#fafafa;padding:6px;border-radius:6px;position:relative;border:2px solid transparent}
-
 .card.top {border:2px solid gold}
 
 .card img {width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer}
 
-.remove {position:absolute;top:4px;right:6px;color:#b22222;cursor:pointer;font-weight:bold}
+.remove {position:absolute;top:4px;right:6px;color:#b22222;font-weight:bold;cursor:pointer}
 
-.rating span {cursor:pointer;font-size:16px}
-
+.rating span {cursor:pointer;font-size:18px}
 .ratingDisplay {font-size:12px;margin-top:4px}
 
-input {width:65%;padding:6px}
-button {padding:6px 10px;margin-left:6px}
+.actions {font-size:12px;margin-top:4px}
+.actions span {cursor:pointer;margin-right:8px}
 
 #preview {
  display:none;
  position:fixed;
  top:0;
  left:0;
- width:100%;
- height:100%;
- background:rgba(0,0,0,0.9);
+ width:100vw;
+ height:100vh;
+ background:rgba(0,0,0,0.92);
  align-items:center;
  justify-content:center;
- z-index:9999;
+ z-index:999999;
 }
 
 #preview img {
- max-width:90%;
- max-height:90%;
- z-index:10000;
+ max-width:90vw;
+ max-height:90vh;
+ z-index:1000000;
 }
+
+body.preview-open {overflow:hidden}
 
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
 #currentUser {margin-bottom:20px;font-weight:bold}
+button.switchUser {margin-left:15px}
 
 </style>
 </head>
@@ -70,10 +71,7 @@ button {padding:6px 10px;margin-left:6px}
 
 <script>
 
-const supabaseClient = supabase.createClient(
-"https://gvbipujajoxdrolatbrw.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng"
-)
+const supabaseClient = supabase.createClient("https://gvbipujajoxdrolatbrw.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng")
 
 const places = ["salzburg", "hamburg", "bratislava", "karlsbad", "bad_flinsberg", "kirschau", "bad_staffelstein", "weimar", "erfurt", "dresden", "breslau", "prag", "nuernberg", "wien"]
 const users = ["Jens", "Simone", "Stephan", "Steffen", "Nobody1", "Nobody2", "Nobody3"]
@@ -119,20 +117,34 @@ async function setUser(){
  userId=uid
  localStorage.setItem("reise_user",uid)
 
- document.getElementById("userSelect").style.display="none"
- document.getElementById("currentUser").textContent="Angemeldet als: "+userName
-
+ showUser()
  init()
 }
 
+function changeUser(){
+ localStorage.removeItem("reise_user")
+ localStorage.removeItem("reise_user_name")
+ location.reload()
+}
+
+function showUser(){
+ document.getElementById("userSelect").style.display="none"
+ document.getElementById("currentUser").innerHTML =
+   "Angemeldet als: "+userName+" <button class='switchUser' onclick='changeUser()'>Nutzer wechseln</button>"
+}
+
 function openPreview(src){
+ document.body.classList.add("preview-open")
  const p=document.getElementById("preview")
  document.getElementById("previewimg").src=src
  p.style.display="flex"
 }
 
 document.addEventListener("click",e=>{
- if(e.target.id==="preview") document.getElementById("preview").style.display="none"
+ if(e.target.id==="preview"){
+   document.getElementById("preview").style.display="none"
+   document.body.classList.remove("preview-open")
+ }
 })
 
 async function loadImages(place){
@@ -152,7 +164,7 @@ async function loadImages(place){
  const {data:ratings} = await supabaseClient
    .from("bewertungen")
    .select("*")
-   .in("bild_id",ids.length?ids:[0])
+   .in("bild_id", ids.length ? ids : [0])
 
  images.forEach(img=>{
 
@@ -172,17 +184,17 @@ async function loadImages(place){
    image.src=img.url
    image.onclick=()=>openPreview(img.url)
 
-   const ratingDiv=document.createElement("div")
-   ratingDiv.className="rating"
-
-   const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
+   const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id && r.rating) : []
 
    let avg=0
    if(imgRatings.length){
-     avg = imgRatings.reduce((a,b)=>a+(b.rating||0),0)/imgRatings.length
+     avg = imgRatings.reduce((a,b)=>a+b.rating,0)/imgRatings.length
    }
 
-   const myRating = imgRatings.find(r=>r.nutzer_id===userId)
+   const myRating = ratings ? ratings.find(r=>r.bild_id===img.id && r.nutzer_id===userId) : null
+
+   const ratingDiv=document.createElement("div")
+   ratingDiv.className="rating"
 
    for(let i=1;i<=5;i++){
      const star=document.createElement("span")
@@ -204,12 +216,41 @@ async function loadImages(place){
    ratingInfo.className="ratingDisplay"
    ratingInfo.textContent = "Ø "+avg.toFixed(1)+" ("+imgRatings.length+" Bewertungen)"
 
+   const actions=document.createElement("div")
+   actions.className="actions"
+
+   const fav=document.createElement("span")
+   fav.textContent="⭐ Favorit"
+
+   fav.onclick=async()=>{
+     await supabaseClient.from("bewertungen").upsert({
+       bild_id:img.id,
+       nutzer_id:userId,
+       favorite:true
+     })
+   }
+
+   const pano=document.createElement("span")
+   pano.textContent="🌄 Panorama"
+
+   pano.onclick=async()=>{
+     await supabaseClient.from("bewertungen").upsert({
+       bild_id:img.id,
+       nutzer_id:userId,
+       panorama:true
+     })
+   }
+
+   actions.appendChild(fav)
+   actions.appendChild(pano)
+
    if(avg>=4) card.classList.add("top")
 
    card.appendChild(remove)
    card.appendChild(image)
    card.appendChild(ratingDiv)
    card.appendChild(ratingInfo)
+   card.appendChild(actions)
 
    container.appendChild(card)
 
@@ -218,7 +259,6 @@ async function loadImages(place){
 }
 
 async function addImage(place){
-
  const input=document.getElementById(place+"_input")
  const url=input.value.trim()
  if(!url) return
@@ -245,7 +285,7 @@ function init(){
 function enableRealtime(){
  supabaseClient
   .channel('bilder-live')
-  .on('postgres_changes', {event:'*', schema:'public', table:'bilder'}, payload=>{
+  .on('postgres_changes',{event:'*',schema:'public',table:'bilder'},payload=>{
      places.forEach(p=>loadImages(p))
   })
   .subscribe()
@@ -255,12 +295,10 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  populateUsers()
  registerButtons()
-
  document.getElementById("confirmUser").addEventListener("click",setUser)
 
  if(userId && userName){
-   document.getElementById("userSelect").style.display="none"
-   document.getElementById("currentUser").textContent="Angemeldet als: "+userName
+   showUser()
    init()
  }
 
