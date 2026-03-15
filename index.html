@@ -3,29 +3,116 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Reisebild Pool</title>
+<title>Reiseprojekt Bildpool</title>
+
 <style>
-body{font-family:Arial;background:#f5f2eb;margin:40px}
-h1{color:#b22222}
-details{background:white;margin-bottom:25px;padding:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-summary{font-size:20px;font-weight:bold;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:12px}
-.card{background:#fafafa;border-radius:8px;padding:6px;position:relative}
-.card img{width:100%;height:120px;object-fit:cover;border-radius:6px}
-.caption{font-size:11px;margin-top:4px;word-break:break-all}
-.remove{position:absolute;top:4px;right:6px;color:#b22222;cursor:pointer;font-weight:bold}
-.rating span{cursor:pointer;font-size:16px}
-.favorite{cursor:pointer;font-size:14px}
-input{width:65%;padding:6px;margin-top:8px}
-button{padding:6px 10px;margin-left:6px}
-.search{font-size:13px;margin-top:10px}
-.topbar{margin-bottom:20px}
+
+body{
+ font-family:Arial,Helvetica,sans-serif;
+ background:#f5f2eb;
+ margin:40px;
+}
+
+h1{
+ color:#b22222;
+ margin-bottom:10px;
+}
+
+.topbar{
+ margin-bottom:25px;
+}
+
+details{
+ background:white;
+ border-radius:10px;
+ padding:15px;
+ margin-bottom:20px;
+ box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+summary{
+ font-size:20px;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+.counter{
+ font-size:12px;
+ color:#666;
+ margin-left:10px;
+}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+ gap:12px;
+ margin-top:15px;
+}
+
+.card{
+ background:#fafafa;
+ border-radius:8px;
+ padding:6px;
+ position:relative;
+}
+
+.card img{
+ width:100%;
+ height:120px;
+ object-fit:cover;
+ border-radius:6px;
+}
+
+.caption{
+ font-size:11px;
+ word-break:break-all;
+ margin-top:4px;
+}
+
+.remove{
+ position:absolute;
+ top:4px;
+ right:6px;
+ color:#b22222;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+.rating span{
+ cursor:pointer;
+ font-size:16px;
+}
+
+.favorite{
+ cursor:pointer;
+ font-size:14px;
+}
+
+.search{
+ font-size:13px;
+ margin-top:8px;
+}
+
+input{
+ width:65%;
+ padding:6px;
+ margin-top:8px;
+}
+
+button{
+ padding:6px 10px;
+ margin-left:6px;
+ cursor:pointer;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<h1>Reisebild Pool</h1>
+<h1>Reiseprojekt Bildpool</h1>
+
 <div class="topbar">
 <button id="exportBtn">Bildpool exportieren</button>
 <input type="file" id="importFile">
@@ -33,191 +120,199 @@ button{padding:6px 10px;margin-left:6px}
 
 <script>
 
-function storageKey(place){ return "reisebilder_"+place }
+const places = ["salzburg", "hamburg", "bratislava", "karlsbad", "bad_flinsberg", "kirschau", "bad_staffelstein", "weimar", "erfurt", "dresden", "breslau", "prag", "nuernberg", "wien"];
 
-function loadSharedPool(){
- fetch("bildpool.json")
- .then(r=>r.json())
- .then(data=>{
-   for(const place in data){
-     const list=data[place];
-     list.forEach(url=>createCard(place,url,0,false,false));
-   }
- })
- .catch(()=>{})
+function storageKey(place){
+ return "reisebilder_"+place;
 }
 
-function loadLocal(place){
- const saved=JSON.parse(localStorage.getItem(storageKey(place))||"[]")
- saved.forEach(obj=>createCard(place,obj.url,obj.rating,obj.favorite,false))
+function updateCounter(place){
+ const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
+ const el = document.getElementById(place+"_count");
+ if(el) el.textContent = data.length + " Bilder";
 }
 
 function saveState(place){
 
- const container=document.getElementById(place+"_list")
- const cards=[...container.querySelectorAll(".card")]
- let data=[]
+ const container=document.getElementById(place+"_list");
+ const cards=[...container.querySelectorAll(".card")];
+
+ let data=[];
 
  cards.forEach(c=>{
 
-   const url=c.querySelector("img").src
-   const fav=c.querySelector(".favorite").dataset.state==="1"
-   const rating=[...c.querySelectorAll(".rating span")].filter(s=>s.textContent==="★").length
+   const url=c.querySelector("img").src;
+   const fav=c.querySelector(".favorite").dataset.state==="1";
+   const rating=[...c.querySelectorAll(".rating span")].filter(s=>s.textContent==="★").length;
 
-   data.push({url,rating,favorite:fav})
+   data.push({url,rating,favorite:fav});
 
- })
+ });
 
- localStorage.setItem(storageKey(place),JSON.stringify(data))
+ localStorage.setItem(storageKey(place),JSON.stringify(data));
+ updateCounter(place);
+}
+
+function createCard(place,url,rating,favorite){
+
+ const container=document.getElementById(place+"_list");
+
+ const card=document.createElement("div");
+ card.className="card";
+
+ const remove=document.createElement("div");
+ remove.className="remove";
+ remove.textContent="✕";
+
+ remove.addEventListener("click",()=>{
+   card.remove();
+   saveState(place);
+ });
+
+ const img=document.createElement("img");
+ img.src=url;
+
+ const caption=document.createElement("div");
+ caption.className="caption";
+ caption.textContent=url;
+
+ const ratingDiv=document.createElement("div");
+ ratingDiv.className="rating";
+
+ let stars=[];
+
+ for(let i=1;i<=5;i++){
+   const s=document.createElement("span");
+   s.textContent = i<=rating ? "★" : "☆";
+
+   s.addEventListener("click",()=>{
+     stars.forEach((st,j)=>{
+       st.textContent = j<i ? "★":"☆";
+     });
+     saveState(place);
+   });
+
+   stars.push(s);
+   ratingDiv.appendChild(s);
+ }
+
+ const fav=document.createElement("div");
+ fav.className="favorite";
+ fav.dataset.state = favorite ? "1":"0";
+ fav.textContent = favorite ? "⭐ Favorit":"☆ Favorit";
+
+ fav.addEventListener("click",()=>{
+   if(fav.dataset.state==="1"){
+     fav.dataset.state="0";
+     fav.textContent="☆ Favorit";
+   }else{
+     fav.dataset.state="1";
+     fav.textContent="⭐ Favorit";
+   }
+   saveState(place);
+ });
+
+ card.appendChild(remove);
+ card.appendChild(img);
+ card.appendChild(caption);
+ card.appendChild(ratingDiv);
+ card.appendChild(fav);
+
+ container.appendChild(card);
 }
 
 function addImage(place){
 
- const input=document.getElementById(place+"_input")
- const url=input.value.trim()
- if(!url) return
+ const input=document.getElementById(place+"_input");
+ const url=input.value.trim();
 
- createCard(place,url,0,false,true)
- input.value=""
+ if(!url) return;
+
+ createCard(place,url,0,false);
+ saveState(place);
+
+ input.value="";
 }
 
-function createCard(place,url,rating,favorite,save){
+function loadLocal(place){
 
- const container=document.getElementById(place+"_list")
+ const saved=JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
 
- const card=document.createElement("div")
- card.className="card"
+ saved.forEach(obj=>{
+   createCard(place,obj.url,obj.rating,obj.favorite);
+ });
 
- const remove=document.createElement("div")
- remove.className="remove"
- remove.textContent="✕"
- remove.onclick=function(){
-   card.remove()
-   saveState(place)
- }
-
- const img=document.createElement("img")
- img.src=url
-
- const cap=document.createElement("div")
- cap.className="caption"
- cap.textContent=url
-
- const ratingDiv=document.createElement("div")
- ratingDiv.className="rating"
-
- let stars=[]
-
- for(let i=1;i<=5;i++){
-   const s=document.createElement("span")
-   s.textContent=(i<=rating)?"★":"☆"
-   s.addEventListener("click",function(){
-      stars.forEach((st,j)=>{
-         st.textContent=(j<i)?"★":"☆"
-      })
-      saveState(place)
-   })
-   stars.push(s)
-   ratingDiv.appendChild(s)
- }
-
- const fav=document.createElement("div")
- fav.className="favorite"
- fav.dataset.state=favorite?"1":"0"
- fav.textContent=favorite?"⭐ Favorit":"☆ Favorit"
-
- fav.addEventListener("click",function(){
-   if(fav.dataset.state==="1"){
-      fav.dataset.state="0"
-      fav.textContent="☆ Favorit"
-   }else{
-      fav.dataset.state="1"
-      fav.textContent="⭐ Favorit"
-   }
-   saveState(place)
- })
-
- card.appendChild(remove)
- card.appendChild(img)
- card.appendChild(cap)
- card.appendChild(ratingDiv)
- card.appendChild(fav)
-
- container.appendChild(card)
-
- if(save) saveState(place)
+ updateCounter(place);
 }
 
 function exportPool(){
 
- let result={}
-
- const places=[
- "salzburg","hamburg","bratislava","karlsbad","bad_flinsberg","kirschau",
- "bad_staffelstein","weimar","erfurt","dresden","breslau","prag","nuernberg","wien"
- ]
+ let result={};
 
  places.forEach(place=>{
 
-   const data = JSON.parse(localStorage.getItem("reisebilder_"+place) || "[]")
+   const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
+   result[place] = data.map(d=>d.url);
 
-   result[place] = data.map(item => item.url)
+ });
 
- })
+ const blob=new Blob([JSON.stringify(result,null,2)],{type:"application/json"});
 
- const blob=new Blob([JSON.stringify(result,null,2)],{type:"application/json"})
-
- const a=document.createElement("a")
- a.href=URL.createObjectURL(blob)
- a.download="bildpool.json"
- a.click()
-
-}
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="bildpool.json";
+ a.click();
 }
 
-document.addEventListener("DOMContentLoaded",function(){
+function importPool(file){
 
- document.getElementById("exportBtn").addEventListener("click",exportPool)
+ const reader=new FileReader();
 
- const importInput=document.getElementById("importFile")
+ reader.onload=function(){
 
- importInput.addEventListener("change",function(){
+   const data=JSON.parse(reader.result);
 
-  const file=importInput.files[0]
-  if(!file) return
+   for(const place in data){
 
-  const reader=new FileReader()
+     data[place].forEach(url=>{
+       createCard(place,url,0,false);
+     });
 
-  reader.onload=function(){
-    const data=JSON.parse(reader.result)
-    for(const place in data){
-      data[place].forEach(url=>createCard(place,url,0,false,true))
-    }
-  }
+     saveState(place);
+   }
 
-  reader.readAsText(file)
+ }
 
- })
+ reader.readAsText(file);
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+ document.getElementById("exportBtn").addEventListener("click",exportPool);
+
+ document.getElementById("importFile").addEventListener("change",e=>{
+   const file=e.target.files[0];
+   if(file) importPool(file);
+ });
 
  document.querySelectorAll(".addButton").forEach(btn=>{
-   btn.addEventListener("click",function(){
-      const place=btn.dataset.place
-      addImage(place)
-   })
- })
 
- loadSharedPool()
+   btn.addEventListener("click",()=>{
+     const place = btn.dataset.place;
+     addImage(place);
+   });
 
- document.querySelectorAll("[data-place]").forEach(sec=>{
-   loadLocal(sec.dataset.place)
- })
+ });
 
-})
+ places.forEach(loadLocal);
+
+});
 
 </script>
 
-<details data-place="salzburg">
-<summary>Salzburg</summary>
+<details>
+
+<summary>Salzburg <span class="counter" id="salzburg_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -234,8 +329,9 @@ Suche:
 
 </details>
 
-<details data-place="hamburg">
-<summary>Hamburg</summary>
+<details>
+
+<summary>Hamburg <span class="counter" id="hamburg_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -252,8 +348,9 @@ Suche:
 
 </details>
 
-<details data-place="bratislava">
-<summary>Bratislava</summary>
+<details>
+
+<summary>Bratislava <span class="counter" id="bratislava_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -270,8 +367,9 @@ Suche:
 
 </details>
 
-<details data-place="karlsbad">
-<summary>Karlsbad</summary>
+<details>
+
+<summary>Karlsbad <span class="counter" id="karlsbad_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -288,8 +386,9 @@ Suche:
 
 </details>
 
-<details data-place="bad_flinsberg">
-<summary>Bad Flinsberg</summary>
+<details>
+
+<summary>Bad Flinsberg <span class="counter" id="bad_flinsberg_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -306,8 +405,9 @@ Suche:
 
 </details>
 
-<details data-place="kirschau">
-<summary>Kirschau</summary>
+<details>
+
+<summary>Kirschau <span class="counter" id="kirschau_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -324,8 +424,9 @@ Suche:
 
 </details>
 
-<details data-place="bad_staffelstein">
-<summary>Bad Staffelstein</summary>
+<details>
+
+<summary>Bad Staffelstein <span class="counter" id="bad_staffelstein_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -342,8 +443,9 @@ Suche:
 
 </details>
 
-<details data-place="weimar">
-<summary>Weimar</summary>
+<details>
+
+<summary>Weimar <span class="counter" id="weimar_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -360,8 +462,9 @@ Suche:
 
 </details>
 
-<details data-place="erfurt">
-<summary>Erfurt</summary>
+<details>
+
+<summary>Erfurt <span class="counter" id="erfurt_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -378,8 +481,9 @@ Suche:
 
 </details>
 
-<details data-place="dresden">
-<summary>Dresden</summary>
+<details>
+
+<summary>Dresden <span class="counter" id="dresden_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -396,8 +500,9 @@ Suche:
 
 </details>
 
-<details data-place="breslau">
-<summary>Breslau</summary>
+<details>
+
+<summary>Breslau <span class="counter" id="breslau_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -414,8 +519,9 @@ Suche:
 
 </details>
 
-<details data-place="prag">
-<summary>Prag</summary>
+<details>
+
+<summary>Prag <span class="counter" id="prag_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -432,8 +538,9 @@ Suche:
 
 </details>
 
-<details data-place="nuernberg">
-<summary>Nuernberg</summary>
+<details>
+
+<summary>Nuernberg <span class="counter" id="nuernberg_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
@@ -450,8 +557,9 @@ Suche:
 
 </details>
 
-<details data-place="wien">
-<summary>Wien</summary>
+<details>
+
+<summary>Wien <span class="counter" id="wien_count">0 Bilder</span></summary>
 
 <div class="search">
 Suche:
