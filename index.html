@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <title>Reiseprojekt Bildpool</title>
 
-<!-- Fixed Supabase loader -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
@@ -16,9 +15,6 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .card {background:#fafafa;padding:6px;border-radius:6px;position:relative}
 .card img {width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer}
 .remove {position:absolute;top:4px;right:6px;color:#b22222;cursor:pointer}
-.rating span {cursor:pointer;font-size:16px}
-.favorite {cursor:pointer;font-size:13px}
-.panorama {cursor:pointer;font-size:13px}
 input {width:65%;padding:6px}
 button {padding:6px 10px;margin-left:6px}
 #preview {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);align-items:center;justify-content:center}
@@ -98,6 +94,12 @@ async function setUser() {
  init()
 }
 
+function registerButtons(){
+ document.querySelectorAll(".addbtn").forEach(btn => {
+  btn.addEventListener("click", () => addImage(btn.dataset.place))
+ })
+}
+
 function openPreview(src) {
  const p = document.getElementById("preview")
  document.getElementById("previewimg").src = src
@@ -123,34 +125,30 @@ async function loadImages(place) {
  if(!data) return
 
  data.forEach(img => {
-   createCard(place, img)
+
+   const card = document.createElement("div")
+   card.className = "card"
+
+   const remove = document.createElement("div")
+   remove.className = "remove"
+   remove.textContent = "✕"
+
+   remove.onclick = async () => {
+     await supabaseClient.from("bilder").delete().eq("id", img.id)
+     loadImages(place)
+   }
+
+   const image = document.createElement("img")
+   image.src = img.url
+   image.onclick = () => openPreview(img.url)
+
+   card.appendChild(remove)
+   card.appendChild(image)
+
+   container.appendChild(card)
+
  })
 
-}
-
-function createCard(place, img) {
-
- const container = document.getElementById(place + "_list")
-
- const card = document.createElement("div")
- card.className = "card"
-
- const remove = document.createElement("div")
- remove.className = "remove"
- remove.textContent = "✕"
-
- remove.onclick = async () => {
-   await supabaseClient.from("bilder").delete().eq("id", img.id)
-   loadImages(place)
- }
-
- const image = document.createElement("img")
- image.src = img.url
- image.onclick = () => openPreview(img.url)
-
- card.appendChild(remove)
- card.appendChild(image)
- container.appendChild(card)
 }
 
 async function addImage(place) {
@@ -170,17 +168,14 @@ async function addImage(place) {
 }
 
 function init() {
-
  places.forEach(p => loadImages(p))
-
- document.querySelectorAll(".addbtn").forEach(btn => {
-  btn.onclick = () => addImage(btn.dataset.place)
- })
 }
 
 document.addEventListener("DOMContentLoaded", () => {
 
  populateUsers()
+ registerButtons()
+
  document.getElementById("confirmUser").addEventListener("click", setUser)
 
  if (userId && userName) {
