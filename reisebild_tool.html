@@ -1,0 +1,937 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Reisebild Auswahl Tool</title>
+<style>
+body{
+ font-family:Arial,Helvetica,sans-serif;
+ background:#f5f2eb;
+ margin:40px;
+}
+h1{color:#b22222;margin-bottom:5px}
+.subtitle{color:#555;margin-bottom:25px}
+
+details{
+ background:white;
+ padding:15px;
+ margin-bottom:25px;
+ border-radius:10px;
+ box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+summary{
+ font-size:20px;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+.counter{
+ font-size:13px;
+ color:#666;
+ margin-left:10px;
+}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+ gap:12px;
+ margin-top:15px;
+}
+
+.card{
+ background:#fafafa;
+ border-radius:8px;
+ padding:6px;
+ position:relative;
+}
+
+.card img{
+ width:100%;
+ height:120px;
+ object-fit:cover;
+ border-radius:6px;
+}
+
+.caption{
+ font-size:11px;
+ margin-top:4px;
+ word-break:break-all;
+}
+
+.remove{
+ position:absolute;
+ top:4px;
+ right:6px;
+ color:#b22222;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+.rating span{
+ cursor:pointer;
+ font-size:16px;
+}
+
+.favorite{
+ cursor:pointer;
+ font-size:14px;
+}
+
+.search{
+ margin-top:10px;
+ font-size:13px;
+}
+
+input{
+ width:65%;
+ padding:5px;
+ margin-top:8px;
+}
+
+button{
+ padding:6px 10px;
+ margin-left:6px;
+ cursor:pointer;
+}
+
+</style>
+
+<script>
+
+function storageKey(place){
+ return "travel_images_"+place;
+}
+
+function loadImages(place){
+ const container = document.getElementById(place+"_list");
+ const counter = document.getElementById(place+"_count");
+ const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
+
+ data.forEach(obj=>createCard(place,obj.url,obj.rating,obj.favorite,false));
+
+ counter.innerText = data.length + " Bilder gesammelt";
+}
+
+function addImage(place){
+
+ const input=document.getElementById(place+"_input");
+ const url=input.value.trim();
+
+ if(!url) return;
+
+ createCard(place,url,0,false,true);
+
+ input.value="";
+}
+
+function createCard(place,url,rating,favorite,save){
+
+ const container=document.getElementById(place+"_list");
+ const counter=document.getElementById(place+"_count");
+
+ const card=document.createElement("div");
+ card.className="card";
+
+ const remove=document.createElement("div");
+ remove.className="remove";
+ remove.innerText="✕";
+
+ const img=document.createElement("img");
+ img.src=url;
+
+ const caption=document.createElement("div");
+ caption.className="caption";
+ caption.innerText=url;
+
+ const ratingDiv=document.createElement("div");
+ ratingDiv.className="rating";
+
+ let stars=[];
+
+ for(let i=1;i<=5;i++){
+   const s=document.createElement("span");
+   s.innerText = (i<=rating) ? "★" : "☆";
+   s.onclick=function(){
+     stars.forEach((st,j)=>{
+       st.innerText = (j<i) ? "★":"☆";
+     });
+     rating=i;
+     saveState();
+   };
+   stars.push(s);
+   ratingDiv.appendChild(s);
+ }
+
+ const fav=document.createElement("div");
+ fav.className="favorite";
+ fav.innerText = favorite ? "⭐ Favorit" : "☆ Favorit";
+ fav.onclick=function(){
+   favorite=!favorite;
+   fav.innerText = favorite ? "⭐ Favorit":"☆ Favorit";
+   saveState();
+ };
+
+ remove.onclick=function(){
+   card.remove();
+   saveState();
+ };
+
+ function saveState(){
+
+   const cards=container.querySelectorAll(".card");
+
+   let list=[];
+
+   cards.forEach(c=>{
+
+     const img=c.querySelector("img").src;
+     const fav=c.querySelector(".favorite").innerText.includes("⭐");
+     const stars=[...c.querySelectorAll(".rating span")].filter(s=>s.innerText==="★").length;
+
+     list.push({url:img,rating:stars,favorite:fav});
+
+   });
+
+   localStorage.setItem(storageKey(place),JSON.stringify(list));
+   counter.innerText = list.length + " Bilder gesammelt";
+
+ }
+
+ card.appendChild(remove);
+ card.appendChild(img);
+ card.appendChild(caption);
+ card.appendChild(ratingDiv);
+ card.appendChild(fav);
+
+ container.appendChild(card);
+
+ if(save) saveState();
+
+}
+
+</script>
+</head>
+
+<body>
+
+<h1>Reisebild Auswahl Tool</h1>
+<div class="subtitle">
+Bilder sammeln, bewerten und Favoriten markieren. Alles wird lokal im Browser gespeichert.
+</div>
+
+
+<details>
+<summary>Salzburg<span class="counter" id="salzburg_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/salzburg?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/salzburg?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/salzburg?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/salzburg?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/salzburg?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=salzburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/salzburg/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="salzburg_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('salzburg')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="salzburg_list"></div>
+
+<script>loadImages("salzburg")</script>
+
+</details>
+
+
+
+<details>
+<summary>Hamburg<span class="counter" id="hamburg_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/hamburg?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/hamburg?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/hamburg?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/hamburg?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/hamburg?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=hamburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/hamburg/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="hamburg_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('hamburg')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="hamburg_list"></div>
+
+<script>loadImages("hamburg")</script>
+
+</details>
+
+
+
+<details>
+<summary>Bratislava<span class="counter" id="bratislava_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bratislava?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bratislava?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bratislava?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bratislava?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bratislava?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=bratislava&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/bratislava/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="bratislava_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('bratislava')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="bratislava_list"></div>
+
+<script>loadImages("bratislava")</script>
+
+</details>
+
+
+
+<details>
+<summary>Karlsbad<span class="counter" id="karlsbad_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/karlsbad?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/karlsbad?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/karlsbad?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/karlsbad?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/karlsbad?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=karlsbad&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/karlsbad/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="karlsbad_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('karlsbad')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="karlsbad_list"></div>
+
+<script>loadImages("karlsbad")</script>
+
+</details>
+
+
+
+<details>
+<summary>Bad Flinsberg<span class="counter" id="bad_flinsberg_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=bad%20flinsberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/bad%20flinsberg/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="bad_flinsberg_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('bad_flinsberg')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="bad_flinsberg_list"></div>
+
+<script>loadImages("bad_flinsberg")</script>
+
+</details>
+
+
+
+<details>
+<summary>Kirschau<span class="counter" id="kirschau_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/kirschau?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/kirschau?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/kirschau?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/kirschau?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/kirschau?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=kirschau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/kirschau/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="kirschau_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('kirschau')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="kirschau_list"></div>
+
+<script>loadImages("kirschau")</script>
+
+</details>
+
+
+
+<details>
+<summary>Bad Staffelstein<span class="counter" id="bad_staffelstein_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=bad%20staffelstein&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/bad%20staffelstein/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="bad_staffelstein_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('bad_staffelstein')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="bad_staffelstein_list"></div>
+
+<script>loadImages("bad_staffelstein")</script>
+
+</details>
+
+
+
+<details>
+<summary>Weimar<span class="counter" id="weimar_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/weimar?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/weimar?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/weimar?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/weimar?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/weimar?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=weimar&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/weimar/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="weimar_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('weimar')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="weimar_list"></div>
+
+<script>loadImages("weimar")</script>
+
+</details>
+
+
+
+<details>
+<summary>Erfurt<span class="counter" id="erfurt_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/erfurt?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/erfurt?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/erfurt?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/erfurt?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/erfurt?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=erfurt&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/erfurt/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="erfurt_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('erfurt')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="erfurt_list"></div>
+
+<script>loadImages("erfurt")</script>
+
+</details>
+
+
+
+<details>
+<summary>Dresden<span class="counter" id="dresden_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/dresden?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/dresden?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/dresden?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/dresden?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/dresden?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=dresden&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/dresden/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="dresden_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('dresden')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="dresden_list"></div>
+
+<script>loadImages("dresden")</script>
+
+</details>
+
+
+
+<details>
+<summary>Breslau<span class="counter" id="breslau_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/breslau?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/breslau?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/breslau?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/breslau?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/breslau?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=breslau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/breslau/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="breslau_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('breslau')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="breslau_list"></div>
+
+<script>loadImages("breslau")</script>
+
+</details>
+
+
+
+<details>
+<summary>Prag<span class="counter" id="prag_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/prag?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/prag?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/prag?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/prag?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/prag?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=prag&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/prag/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="prag_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('prag')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="prag_list"></div>
+
+<script>loadImages("prag")</script>
+
+</details>
+
+
+
+<details>
+<summary>Nuernberg<span class="counter" id="nuernberg_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/nuernberg?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/nuernberg?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/nuernberg?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/nuernberg?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/nuernberg?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=nuernberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/nuernberg/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="nuernberg_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('nuernberg')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="nuernberg_list"></div>
+
+<script>loadImages("nuernberg")</script>
+
+</details>
+
+
+
+<details>
+<summary>Wien<span class="counter" id="wien_count">0 Bilder gesammelt</span></summary>
+
+<div class="grid">
+
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/wien?lock=1">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/wien?lock=2">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/wien?lock=3">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/wien?lock=4">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+        <div class="card">
+        <img src="https://loremflickr.com/320/240/wien?lock=5">
+        <div class="caption">Beispielbild</div>
+        </div>
+        
+</div>
+
+<div class="search">
+Suche:
+<a href="https://commons.wikimedia.org/w/index.php?search=wien&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
+<a href="https://www.pexels.com/search/wien/" target="_blank">Pexels</a>
+</div>
+
+<div>
+<input id="wien_input" placeholder="Bildlink einfügen">
+<button onclick="addImage('wien')">Hinzufügen</button>
+</div>
+
+<div class="grid" id="wien_list"></div>
+
+<script>loadImages("wien")</script>
+
+</details>
+
+</body></html>
