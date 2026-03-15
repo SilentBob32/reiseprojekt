@@ -119,54 +119,6 @@ document.addEventListener("click",e=>{
  }
 })
 
-async function toggleFavorite(imgId){
- const {data:existing} = await supabaseClient
-   .from("bewertungen")
-   .select("*")
-   .eq("bild_id", imgId)
-   .eq("nutzer_id", userId)
-   .maybeSingle()
-
- if(existing){
-   await supabaseClient
-     .from("bewertungen")
-     .update({favorite: !existing.favorite})
-     .eq("id", existing.id)
- } else {
-   await supabaseClient
-     .from("bewertungen")
-     .insert({bild_id:imgId,nutzer_id:userId,favorite:true})
- }
-}
-
-async function setPanorama(imgId, placeImages){
- const ids = placeImages.map(i=>i.id)
-
- await supabaseClient
-   .from("bewertungen")
-   .update({panorama:false})
-   .eq("nutzer_id",userId)
-   .in("bild_id",ids)
-
- const {data:existing} = await supabaseClient
-   .from("bewertungen")
-   .select("*")
-   .eq("bild_id", imgId)
-   .eq("nutzer_id", userId)
-   .maybeSingle()
-
- if(existing){
-   await supabaseClient
-     .from("bewertungen")
-     .update({panorama:true})
-     .eq("id", existing.id)
- } else {
-   await supabaseClient
-     .from("bewertungen")
-     .insert({bild_id:imgId,nutzer_id:userId,panorama:true})
- }
-}
-
 async function loadImages(place){
  const {data:images} = await supabaseClient.from("bilder").select("*").eq("ort",place)
  const container=document.getElementById(place+"_list")
@@ -198,6 +150,9 @@ async function loadImages(place){
 
    const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
    const myEntry = imgRatings.find(r=>r.nutzer_id===userId)
+
+   const isFavorite = myEntry && myEntry.favorite === true
+   const isPanorama = myEntry && myEntry.panorama === true
    const myRating = myEntry ? myEntry.rating : 0
 
    let avg=0
@@ -235,25 +190,49 @@ async function loadImages(place){
 
    const fav=document.createElement("span")
    const favIcon=document.createElement("span")
-   favIcon.className="icon "+(myEntry && myEntry.favorite ? "active-fav":"")
+   favIcon.className="icon "+(isFavorite ? "active-fav":"")
    favIcon.textContent="⭐"
    fav.appendChild(favIcon)
    fav.append(" Favorit")
 
    fav.onclick=async()=>{
-     await toggleFavorite(img.id)
+     if(myEntry){
+       await supabaseClient.from("bewertungen")
+         .update({favorite:!isFavorite})
+         .eq("bild_id",img.id)
+         .eq("nutzer_id",userId)
+     }else{
+       await supabaseClient.from("bewertungen")
+         .insert({bild_id:img.id,nutzer_id:userId,favorite:true})
+     }
      loadImages(place)
    }
 
    const pano=document.createElement("span")
    const panoIcon=document.createElement("span")
-   panoIcon.className="icon "+(myEntry && myEntry.panorama ? "active-panorama":"")
+   panoIcon.className="icon "+(isPanorama ? "active-panorama":"")
    panoIcon.textContent="🌄"
    pano.appendChild(panoIcon)
    pano.append(" Panorama")
 
    pano.onclick=async()=>{
-     await setPanorama(img.id, images)
+     const placeIds=images.map(i=>i.id)
+
+     await supabaseClient.from("bewertungen")
+       .update({panorama:false})
+       .eq("nutzer_id",userId)
+       .in("bild_id",placeIds)
+
+     if(myEntry){
+       await supabaseClient.from("bewertungen")
+         .update({panorama:true})
+         .eq("bild_id",img.id)
+         .eq("nutzer_id",userId)
+     }else{
+       await supabaseClient.from("bewertungen")
+         .insert({bild_id:img.id,nutzer_id:userId,panorama:true})
+     }
+
      loadImages(place)
    }
 
@@ -269,6 +248,7 @@ async function loadImages(place){
    card.appendChild(actions)
 
    container.appendChild(card)
+
  })
 
 }
@@ -292,6 +272,7 @@ function registerButtons(){
 function init(){ places.forEach(p=>loadImages(p)) }
 
 document.addEventListener("DOMContentLoaded",()=>{
+
  populateUsers()
  registerButtons()
  document.getElementById("confirmUser").onclick=setUser
@@ -300,6 +281,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    showUser()
    init()
  }
+
 })
 
 </script>
