@@ -152,20 +152,27 @@ function exportPool(){
 
  let result={}
 
- document.querySelectorAll("[data-place]").forEach(section=>{
+ const places=[
+ "salzburg","hamburg","bratislava","karlsbad","bad_flinsberg","kirschau",
+ "bad_staffelstein","weimar","erfurt","dresden","breslau","prag","nuernberg","wien"
+ ]
 
-   const place=section.dataset.place
-   const cards=[...section.querySelectorAll(".card")]
+ places.forEach(place=>{
 
-   result[place]=cards.map(c=>c.querySelector("img").src)
+   const data = JSON.parse(localStorage.getItem("reisebilder_"+place) || "[]")
+
+   result[place] = data.map(item => item.url)
 
  })
 
  const blob=new Blob([JSON.stringify(result,null,2)],{type:"application/json"})
+
  const a=document.createElement("a")
  a.href=URL.createObjectURL(blob)
  a.download="bildpool.json"
  a.click()
+
+}
 }
 
 document.addEventListener("DOMContentLoaded",function(){
