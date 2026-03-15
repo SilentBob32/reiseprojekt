@@ -5,36 +5,24 @@
 <meta charset="UTF-8">
 <title>Reiseprojekt Bildpool</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
-
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
-
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:10px}
-
 .card {background:#fafafa;padding:8px;border-radius:8px;position:relative;border:2px solid transparent}
 .card.top {border:2px solid gold}
-
 .card img {width:100%;height:130px;object-fit:cover;border-radius:6px;cursor:pointer}
-
 .remove {position:absolute;top:4px;right:6px;color:#b22222;font-weight:bold;cursor:pointer}
-
 .rating span {cursor:pointer;font-size:20px}
 .ratingDisplay {font-size:12px;margin-top:4px}
-
 .actions {margin-top:6px;font-size:14px;color:black}
-
 .icon {color:#bbb;font-size:16px;margin-right:6px}
 .icon.active-fav {color:gold}
 .icon.active-panorama {color:#2a7cff}
-
 #preview {display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;z-index:999999}
 #preview img {max-width:90vw;max-height:90vh}
-
 body.preview-open {overflow:hidden}
-
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
 #currentUser {margin-bottom:20px;font-weight:bold}
 </style>
@@ -125,10 +113,21 @@ async function loadImages(place){
  container.innerHTML=""
  if(!images) return
 
- const ids=images.map(i=>i.id)
- const {data:ratings} = await supabaseClient.from("bewertungen").select("*").in("bild_id", ids.length?ids:[0])
+ for (const img of images){
 
- images.forEach(img=>{
+   const {data:imgRatings} = await supabaseClient
+     .from("bewertungen")
+     .select("*")
+     .eq("bild_id", img.id)
+
+   const myEntry = imgRatings.find(r => r.nutzer_id === userId)
+   const isFavorite = myEntry && myEntry.favorite === true
+   const isPanorama = myEntry && myEntry.panorama === true
+   const myRating = myEntry ? myEntry.rating : 0
+
+   let avg=0
+   const valid = imgRatings.filter(r=>r.rating)
+   if(valid.length) avg = valid.reduce((a,b)=>a+b.rating,0)/valid.length
 
    const card=document.createElement("div")
    card.className="card"
@@ -148,17 +147,6 @@ async function loadImages(place){
    image.src=img.url
    image.onclick=()=>openPreview(img.url)
 
-   const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
-   const myEntry = imgRatings.find(r=>r.nutzer_id===userId)
-
-   const isFavorite = myEntry && myEntry.favorite === true
-   const isPanorama = myEntry && myEntry.panorama === true
-   const myRating = myEntry ? myEntry.rating : 0
-
-   let avg=0
-   const valid=imgRatings.filter(r=>r.rating)
-   if(valid.length) avg=valid.reduce((a,b)=>a+b.rating,0)/valid.length
-
    const ratingDiv=document.createElement("div")
 
    for(let i=1;i<=5;i++){
@@ -172,9 +160,8 @@ async function loadImages(place){
            .eq("bild_id",img.id)
            .eq("nutzer_id",userId)
        }else{
-         await supabaseClient.from("bewertungen").insert({
-           bild_id:img.id,nutzer_id:userId,rating:i
-         })
+         await supabaseClient.from("bewertungen")
+           .insert({bild_id:img.id,nutzer_id:userId,rating:i})
        }
        loadImages(place)
      }
@@ -216,12 +203,12 @@ async function loadImages(place){
    pano.append(" Panorama")
 
    pano.onclick=async()=>{
-     const placeIds=images.map(i=>i.id)
+     const placeImages = images.map(i=>i.id)
 
      await supabaseClient.from("bewertungen")
        .update({panorama:false})
        .eq("nutzer_id",userId)
-       .in("bild_id",placeIds)
+       .in("bild_id",placeImages)
 
      if(myEntry){
        await supabaseClient.from("bewertungen")
@@ -232,14 +219,11 @@ async function loadImages(place){
        await supabaseClient.from("bewertungen")
          .insert({bild_id:img.id,nutzer_id:userId,panorama:true})
      }
-
      loadImages(place)
    }
 
    actions.appendChild(fav)
    actions.appendChild(pano)
-
-   if(avg>=4) card.classList.add("top")
 
    card.appendChild(remove)
    card.appendChild(image)
@@ -248,9 +232,7 @@ async function loadImages(place){
    card.appendChild(actions)
 
    container.appendChild(card)
-
- })
-
+  }
 }
 
 async function addImage(place){
@@ -272,7 +254,6 @@ function registerButtons(){
 function init(){ places.forEach(p=>loadImages(p)) }
 
 document.addEventListener("DOMContentLoaded",()=>{
-
  populateUsers()
  registerButtons()
  document.getElementById("confirmUser").onclick=setUser
@@ -281,7 +262,6 @@ document.addEventListener("DOMContentLoaded",()=>{
    showUser()
    init()
  }
-
 })
 
 </script>
