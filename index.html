@@ -6,7 +6,6 @@
 <title>Reiseprojekt Bildpool</title>
 
 <style>
-
 body{
  font-family:Arial,Helvetica,sans-serif;
  background:#f5f2eb;
@@ -26,12 +25,6 @@ details{
 }
 
 summary{ font-size:20px; font-weight:bold; cursor:pointer; }
-
-.counter{
- font-size:12px;
- color:#666;
- margin-left:10px;
-}
 
 .grid{
  display:grid;
@@ -74,6 +67,8 @@ summary{ font-size:20px; font-weight:bold; cursor:pointer; }
 
 .favorite{ cursor:pointer; font-size:14px; }
 
+.panorama{ cursor:pointer; font-size:12px; }
+
 .search{ font-size:13px; margin-top:8px; }
 
 input{
@@ -88,7 +83,15 @@ button{
  cursor:pointer;
 }
 
-/* Modal preview */
+.toplist{
+ margin-top:10px;
+ font-size:13px;
+ background:#fff4e0;
+ padding:8px;
+ border-radius:6px;
+}
+
+/* Preview modal */
 
 #previewModal{
  display:none;
@@ -109,8 +112,6 @@ button{
  border-radius:10px;
 }
 
-#previewModal.closeable{ cursor:pointer; }
-
 </style>
 
 </head>
@@ -124,7 +125,7 @@ button{
 <input type="file" id="importFile">
 </div>
 
-<div id="previewModal" class="closeable">
+<div id="previewModal">
 <img id="previewImage">
 </div>
 
@@ -143,21 +144,11 @@ function openPreview(src){
  modal.style.display="flex";
 }
 
-function closePreview(){
- document.getElementById("previewModal").style.display="none";
-}
-
 document.addEventListener("click",function(e){
  if(e.target.id==="previewModal"){
-   closePreview();
+   document.getElementById("previewModal").style.display="none";
  }
 });
-
-function updateCounter(place){
- const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
- const el = document.getElementById(place+"_count");
- if(el) el.textContent = data.length + " Bilder";
-}
 
 function saveState(place){
 
@@ -170,17 +161,18 @@ function saveState(place){
 
    const url=c.querySelector("img").src;
    const fav=c.querySelector(".favorite").dataset.state==="1";
+   const pano=c.querySelector(".panorama").dataset.state==="1";
    const rating=[...c.querySelectorAll(".rating span")].filter(s=>s.textContent==="★").length;
 
-   data.push({url,rating,favorite:fav});
+   data.push({url,rating,favorite:fav,panorama:pano});
 
  });
 
  localStorage.setItem(storageKey(place),JSON.stringify(data));
- updateCounter(place);
+ updateTop(place);
 }
 
-function createCard(place,url,rating,favorite){
+function createCard(place,url,rating,favorite,panorama){
 
  const container=document.getElementById(place+"_list");
 
@@ -199,9 +191,7 @@ function createCard(place,url,rating,favorite){
  const img=document.createElement("img");
  img.src=url;
 
- img.addEventListener("click",()=>{
-   openPreview(url);
- });
+ img.addEventListener("click",()=>openPreview(url));
 
  const caption=document.createElement("div");
  caption.className="caption";
@@ -214,11 +204,11 @@ function createCard(place,url,rating,favorite){
 
  for(let i=1;i<=5;i++){
    const s=document.createElement("span");
-   s.textContent = i<=rating ? "★" : "☆";
+   s.textContent = i<=rating ? "★":"☆";
 
    s.addEventListener("click",()=>{
      stars.forEach((st,j)=>{
-       st.textContent = j<i ? "★":"☆";
+       st.textContent=j<i?"★":"☆";
      });
      saveState(place);
    });
@@ -229,8 +219,8 @@ function createCard(place,url,rating,favorite){
 
  const fav=document.createElement("div");
  fav.className="favorite";
- fav.dataset.state = favorite ? "1":"0";
- fav.textContent = favorite ? "⭐ Favorit":"☆ Favorit";
+ fav.dataset.state=favorite?"1":"0";
+ fav.textContent=favorite?"⭐ Favorit":"☆ Favorit";
 
  fav.addEventListener("click",()=>{
    if(fav.dataset.state==="1"){
@@ -243,11 +233,28 @@ function createCard(place,url,rating,favorite){
    saveState(place);
  });
 
+ const pano=document.createElement("div");
+ pano.className="panorama";
+ pano.dataset.state=panorama?"1":"0";
+ pano.textContent=panorama?"🌄 Panorama":"Panorama setzen";
+
+ pano.addEventListener("click",()=>{
+   if(pano.dataset.state==="1"){
+     pano.dataset.state="0";
+     pano.textContent="Panorama setzen";
+   }else{
+     pano.dataset.state="1";
+     pano.textContent="🌄 Panorama";
+   }
+   saveState(place);
+ });
+
  card.appendChild(remove);
  card.appendChild(img);
  card.appendChild(caption);
  card.appendChild(ratingDiv);
  card.appendChild(fav);
+ card.appendChild(pano);
 
  container.appendChild(card);
 }
@@ -259,7 +266,7 @@ function addImage(place){
 
  if(!url) return;
 
- createCard(place,url,0,false);
+ createCard(place,url,0,false,false);
  saveState(place);
 
  input.value="";
@@ -267,13 +274,35 @@ function addImage(place){
 
 function loadLocal(place){
 
- const saved=JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
+ const saved=JSON.parse(localStorage.getItem(storageKey(place))||"[]");
 
  saved.forEach(obj=>{
-   createCard(place,obj.url,obj.rating,obj.favorite);
+   createCard(place,obj.url,obj.rating,obj.favorite,obj.panorama);
  });
 
- updateCounter(place);
+ updateTop(place);
+}
+
+function updateTop(place){
+
+ const saved=JSON.parse(localStorage.getItem(storageKey(place))||"[]");
+
+ const sorted=[...saved].sort((a,b)=>b.rating-a.rating).slice(0,3);
+
+ const box=document.getElementById(place+"_top");
+
+ if(!box) return;
+
+ box.innerHTML="";
+
+ sorted.forEach((img,i)=>{
+
+   const div=document.createElement("div");
+   div.textContent="Top "+(i+1)+": "+img.url;
+   box.appendChild(div);
+
+ });
+
 }
 
 function exportPool(){
@@ -282,8 +311,8 @@ function exportPool(){
 
  places.forEach(place=>{
 
-   const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
-   result[place] = data.map(d=>d.url);
+   const data=JSON.parse(localStorage.getItem(storageKey(place))||"[]");
+   result[place]=data.map(d=>d.url);
 
  });
 
@@ -306,7 +335,7 @@ function importPool(file){
    for(const place in data){
 
      data[place].forEach(url=>{
-       createCard(place,url,0,false);
+       createCard(place,url,0,false,false);
      });
 
      saveState(place);
@@ -329,7 +358,7 @@ document.addEventListener("DOMContentLoaded",()=>{
  document.querySelectorAll(".addButton").forEach(btn=>{
 
    btn.addEventListener("click",()=>{
-     const place = btn.dataset.place;
+     const place=btn.dataset.place;
      addImage(place);
    });
 
@@ -343,7 +372,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 
-<summary>Salzburg <span class="counter" id="salzburg_count">0 Bilder</span></summary>
+<summary>Salzburg</summary>
 
 
 <div class="grid">
@@ -366,13 +395,15 @@ Suche:
 <button class="addButton" data-place="salzburg">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="salzburg_top"></div>
+
 <div class="grid" id="salzburg_list"></div>
 
 </details>
 
 <details>
 
-<summary>Hamburg <span class="counter" id="hamburg_count">0 Bilder</span></summary>
+<summary>Hamburg</summary>
 
 
 <div class="grid">
@@ -395,13 +426,15 @@ Suche:
 <button class="addButton" data-place="hamburg">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="hamburg_top"></div>
+
 <div class="grid" id="hamburg_list"></div>
 
 </details>
 
 <details>
 
-<summary>Bratislava <span class="counter" id="bratislava_count">0 Bilder</span></summary>
+<summary>Bratislava</summary>
 
 
 <div class="grid">
@@ -424,13 +457,15 @@ Suche:
 <button class="addButton" data-place="bratislava">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="bratislava_top"></div>
+
 <div class="grid" id="bratislava_list"></div>
 
 </details>
 
 <details>
 
-<summary>Karlsbad <span class="counter" id="karlsbad_count">0 Bilder</span></summary>
+<summary>Karlsbad</summary>
 
 
 <div class="grid">
@@ -453,13 +488,15 @@ Suche:
 <button class="addButton" data-place="karlsbad">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="karlsbad_top"></div>
+
 <div class="grid" id="karlsbad_list"></div>
 
 </details>
 
 <details>
 
-<summary>Bad Flinsberg <span class="counter" id="bad_flinsberg_count">0 Bilder</span></summary>
+<summary>Bad Flinsberg</summary>
 
 
 <div class="grid">
@@ -482,13 +519,15 @@ Suche:
 <button class="addButton" data-place="bad_flinsberg">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="bad_flinsberg_top"></div>
+
 <div class="grid" id="bad_flinsberg_list"></div>
 
 </details>
 
 <details>
 
-<summary>Kirschau <span class="counter" id="kirschau_count">0 Bilder</span></summary>
+<summary>Kirschau</summary>
 
 
 <div class="grid">
@@ -511,13 +550,15 @@ Suche:
 <button class="addButton" data-place="kirschau">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="kirschau_top"></div>
+
 <div class="grid" id="kirschau_list"></div>
 
 </details>
 
 <details>
 
-<summary>Bad Staffelstein <span class="counter" id="bad_staffelstein_count">0 Bilder</span></summary>
+<summary>Bad Staffelstein</summary>
 
 
 <div class="grid">
@@ -540,13 +581,15 @@ Suche:
 <button class="addButton" data-place="bad_staffelstein">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="bad_staffelstein_top"></div>
+
 <div class="grid" id="bad_staffelstein_list"></div>
 
 </details>
 
 <details>
 
-<summary>Weimar <span class="counter" id="weimar_count">0 Bilder</span></summary>
+<summary>Weimar</summary>
 
 
 <div class="grid">
@@ -569,13 +612,15 @@ Suche:
 <button class="addButton" data-place="weimar">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="weimar_top"></div>
+
 <div class="grid" id="weimar_list"></div>
 
 </details>
 
 <details>
 
-<summary>Erfurt <span class="counter" id="erfurt_count">0 Bilder</span></summary>
+<summary>Erfurt</summary>
 
 
 <div class="grid">
@@ -598,13 +643,15 @@ Suche:
 <button class="addButton" data-place="erfurt">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="erfurt_top"></div>
+
 <div class="grid" id="erfurt_list"></div>
 
 </details>
 
 <details>
 
-<summary>Dresden <span class="counter" id="dresden_count">0 Bilder</span></summary>
+<summary>Dresden</summary>
 
 
 <div class="grid">
@@ -627,13 +674,15 @@ Suche:
 <button class="addButton" data-place="dresden">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="dresden_top"></div>
+
 <div class="grid" id="dresden_list"></div>
 
 </details>
 
 <details>
 
-<summary>Breslau <span class="counter" id="breslau_count">0 Bilder</span></summary>
+<summary>Breslau</summary>
 
 
 <div class="grid">
@@ -656,13 +705,15 @@ Suche:
 <button class="addButton" data-place="breslau">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="breslau_top"></div>
+
 <div class="grid" id="breslau_list"></div>
 
 </details>
 
 <details>
 
-<summary>Prag <span class="counter" id="prag_count">0 Bilder</span></summary>
+<summary>Prag</summary>
 
 
 <div class="grid">
@@ -685,13 +736,15 @@ Suche:
 <button class="addButton" data-place="prag">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="prag_top"></div>
+
 <div class="grid" id="prag_list"></div>
 
 </details>
 
 <details>
 
-<summary>Nuernberg <span class="counter" id="nuernberg_count">0 Bilder</span></summary>
+<summary>Nuernberg</summary>
 
 
 <div class="grid">
@@ -714,13 +767,15 @@ Suche:
 <button class="addButton" data-place="nuernberg">Hinzufügen</button>
 </div>
 
+<div class="toplist" id="nuernberg_top"></div>
+
 <div class="grid" id="nuernberg_list"></div>
 
 </details>
 
 <details>
 
-<summary>Wien <span class="counter" id="wien_count">0 Bilder</span></summary>
+<summary>Wien</summary>
 
 
 <div class="grid">
@@ -742,6 +797,8 @@ Suche:
 <input id="wien_input" placeholder="Bildlink einfügen">
 <button class="addButton" data-place="wien">Hinzufügen</button>
 </div>
+
+<div class="toplist" id="wien_top"></div>
 
 <div class="grid" id="wien_list"></div>
 
