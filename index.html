@@ -4,7 +4,9 @@
 <head>
 <meta charset="UTF-8">
 <title>Reiseprojekt Bildpool</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Fixed Supabase loader -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
@@ -42,7 +44,7 @@ button {padding:6px 10px;margin-left:6px}
 
 <script>
 
-const supabase = window.supabase.createClient(
+const supabaseClient = supabase.createClient(
 "https://gvbipujajoxdrolatbrw.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng"
 )
@@ -69,7 +71,7 @@ async function setUser() {
  userName = name
  localStorage.setItem("reise_user_name", name)
 
- const { data } = await supabase
+ const { data } = await supabaseClient
    .from("nutzer")
    .select("*")
    .eq("name", name)
@@ -80,7 +82,7 @@ async function setUser() {
  if (data) {
    uid = data.id
  } else {
-   const { data: ins } = await supabase
+   const { data: ins } = await supabaseClient
       .from("nutzer")
       .insert({ name: name })
       .select()
@@ -92,7 +94,7 @@ async function setUser() {
  localStorage.setItem("reise_user", uid)
 
  document.getElementById("userSelect").style.display = "none"
- document.getElementById("currentUser").textContent = "Angemeldet als: " + userName + " (Nutzer wechseln: Seite neu laden)"
+ document.getElementById("currentUser").textContent = "Angemeldet als: " + userName
  init()
 }
 
@@ -110,13 +112,15 @@ document.addEventListener("click", e => {
 
 async function loadImages(place) {
 
- const { data } = await supabase
+ const { data } = await supabaseClient
    .from("bilder")
    .select("*")
    .eq("ort", place)
 
  const container = document.getElementById(place + "_list")
  container.innerHTML = ""
+
+ if(!data) return
 
  data.forEach(img => {
    createCard(place, img)
@@ -136,7 +140,7 @@ function createCard(place, img) {
  remove.textContent = "✕"
 
  remove.onclick = async () => {
-   await supabase.from("bilder").delete().eq("id", img.id)
+   await supabaseClient.from("bilder").delete().eq("id", img.id)
    loadImages(place)
  }
 
@@ -144,55 +148,8 @@ function createCard(place, img) {
  image.src = img.url
  image.onclick = () => openPreview(img.url)
 
- const rating = document.createElement("div")
- rating.className = "rating"
-
- for (let i = 1; i <= 5; i++) {
-
-  const s = document.createElement("span")
-  s.textContent = "☆"
-
-  s.onclick = async () => {
-   await supabase.from("bewertungen").upsert({
-    bild_id: img.id,
-    nutzer_id: userId,
-    rating: i
-   })
-  }
-
-  rating.appendChild(s)
- }
-
- const fav = document.createElement("div")
- fav.className = "favorite"
- fav.textContent = "⭐ Favorit"
-
- fav.onclick = async () => {
-  await supabase.from("bewertungen").upsert({
-   bild_id: img.id,
-   nutzer_id: userId,
-   favorite: true
-  })
- }
-
- const pano = document.createElement("div")
- pano.className = "panorama"
- pano.textContent = "🌄 Panorama"
-
- pano.onclick = async () => {
-  await supabase.from("bewertungen").upsert({
-   bild_id: img.id,
-   nutzer_id: userId,
-   panorama: true
-  })
- }
-
  card.appendChild(remove)
  card.appendChild(image)
- card.appendChild(rating)
- card.appendChild(fav)
- card.appendChild(pano)
-
  container.appendChild(card)
 }
 
@@ -203,7 +160,7 @@ async function addImage(place) {
 
  if (!url) return
 
- await supabase.from("bilder").insert({
+ await supabaseClient.from("bilder").insert({
   ort: place,
   url: url
  })
@@ -224,7 +181,6 @@ function init() {
 document.addEventListener("DOMContentLoaded", () => {
 
  populateUsers()
-
  document.getElementById("confirmUser").addEventListener("click", setUser)
 
  if (userId && userName) {
