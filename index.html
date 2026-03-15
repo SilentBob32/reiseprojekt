@@ -26,28 +26,11 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 
 .actions {margin-top:6px;font-size:14px;color:black}
 
-.icon {
-color:#bbb;
-font-size:16px;
-margin-right:6px;
-}
-
+.icon {color:#bbb;font-size:16px;margin-right:6px}
 .icon.active-fav {color:gold}
 .icon.active-panorama {color:#2a7cff}
 
-#preview {
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100vw;
-height:100vh;
-background:rgba(0,0,0,0.92);
-align-items:center;
-justify-content:center;
-z-index:999999;
-}
-
+#preview {display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;z-index:999999}
 #preview img {max-width:90vw;max-height:90vh}
 
 body.preview-open {overflow:hidden}
@@ -74,7 +57,6 @@ body.preview-open {overflow:hidden}
 <script>
 
 const supabaseClient = supabase.createClient("https://gvbipujajoxdrolatbrw.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng")
-
 const places = ["salzburg", "hamburg", "bratislava", "karlsbad", "bad_flinsberg", "kirschau", "bad_staffelstein", "weimar", "erfurt", "dresden", "breslau", "prag", "nuernberg", "wien"]
 const users = ["Jens", "Simone", "Stephan", "Steffen", "Nobody1", "Nobody2", "Nobody3"]
 
@@ -96,21 +78,12 @@ async function setUser(){
  userName=name
  localStorage.setItem("reise_user_name",name)
 
- const {data} = await supabaseClient
-   .from("nutzer")
-   .select("*")
-   .eq("name",name)
-   .maybeSingle()
-
+ const {data} = await supabaseClient.from("nutzer").select("*").eq("name",name).maybeSingle()
  let uid
 
- if(data){ uid=data.id }
+ if(data) uid=data.id
  else{
-   const {data:ins} = await supabaseClient
-     .from("nutzer")
-     .insert({name:name})
-     .select()
-     .single()
+   const {data:ins} = await supabaseClient.from("nutzer").insert({name:name}).select().single()
    uid=ins.id
  }
 
@@ -147,23 +120,13 @@ document.addEventListener("click",e=>{
 })
 
 async function loadImages(place){
-
- const {data:images} = await supabaseClient
-  .from("bilder")
-  .select("*")
-  .eq("ort",place)
-
+ const {data:images} = await supabaseClient.from("bilder").select("*").eq("ort",place)
  const container=document.getElementById(place+"_list")
  container.innerHTML=""
-
  if(!images) return
 
- const ids = images.map(i=>i.id)
-
- const {data:ratings} = await supabaseClient
-   .from("bewertungen")
-   .select("*")
-   .in("bild_id", ids.length ? ids : [0])
+ const ids=images.map(i=>i.id)
+ const {data:ratings} = await supabaseClient.from("bewertungen").select("*").in("bild_id", ids.length?ids:[0])
 
  images.forEach(img=>{
 
@@ -176,22 +139,13 @@ async function loadImages(place){
 
    remove.addEventListener("click", async ()=>{
 
-     if(!confirm("Bild wirklich löschen?")) return
+     if(!confirm("Bild wirklich löschen?\nAlle Bewertungen zu diesem Bild werden ebenfalls entfernt.")) return
 
-     await supabaseClient
-       .from("bewertungen")
-       .delete()
-       .eq("bild_id",img.id)
+     await supabaseClient.from("bewertungen").delete().eq("bild_id",img.id)
+     const {error} = await supabaseClient.from("bilder").delete().eq("id",img.id)
 
-     const {error} = await supabaseClient
-       .from("bilder")
-       .delete()
-       .eq("id",img.id)
-
-     if(error) alert(error.message)
-
+     if(error){ alert(error.message); return }
      loadImages(place)
-
    })
 
    const image=document.createElement("img")
@@ -200,6 +154,7 @@ async function loadImages(place){
 
    const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
    const myEntry = imgRatings.find(r=>r.nutzer_id===userId)
+   const myRating = myEntry ? myEntry.rating : 0
 
    let avg=0
    const valid=imgRatings.filter(r=>r.rating)
@@ -210,28 +165,24 @@ async function loadImages(place){
 
    for(let i=1;i<=5;i++){
      const star=document.createElement("span")
-     star.textContent = myEntry && myEntry.rating>=i ? "★":"☆"
+     star.textContent = myRating>=i ? "★":"☆"
 
      star.addEventListener("click", async ()=>{
 
        if(myEntry){
-         await supabaseClient
-           .from("bewertungen")
+         await supabaseClient.from("bewertungen")
            .update({rating:i})
            .eq("bild_id",img.id)
            .eq("nutzer_id",userId)
        }else{
-         await supabaseClient
-           .from("bewertungen")
-           .insert({
-             bild_id:img.id,
-             nutzer_id:userId,
-             rating:i
-           })
+         await supabaseClient.from("bewertungen").insert({
+           bild_id:img.id,
+           nutzer_id:userId,
+           rating:i
+         })
        }
 
        loadImages(place)
-
      })
 
      ratingDiv.appendChild(star)
@@ -253,16 +204,20 @@ async function loadImages(place){
 
    fav.addEventListener("click", async ()=>{
 
-     if(!myEntry) return
-
-     await supabaseClient
-       .from("bewertungen")
-       .update({favorite:!myEntry.favorite})
-       .eq("bild_id",img.id)
-       .eq("nutzer_id",userId)
+     if(myEntry){
+       await supabaseClient.from("bewertungen")
+         .update({favorite:!myEntry.favorite})
+         .eq("bild_id",img.id)
+         .eq("nutzer_id",userId)
+     }else{
+       await supabaseClient.from("bewertungen").insert({
+         bild_id:img.id,
+         nutzer_id:userId,
+         favorite:true
+       })
+     }
 
      loadImages(place)
-
    })
 
    const pano=document.createElement("span")
@@ -274,22 +229,27 @@ async function loadImages(place){
 
    pano.addEventListener("click", async ()=>{
 
-     const placeIds = images.map(i=>i.id)
+     const placeIds=images.map(i=>i.id)
 
-     await supabaseClient
-       .from("bewertungen")
+     await supabaseClient.from("bewertungen")
        .update({panorama:false})
        .eq("nutzer_id",userId)
        .in("bild_id",placeIds)
 
-     await supabaseClient
-       .from("bewertungen")
-       .update({panorama:true})
-       .eq("bild_id",img.id)
-       .eq("nutzer_id",userId)
+     if(myEntry){
+       await supabaseClient.from("bewertungen")
+         .update({panorama:true})
+         .eq("bild_id",img.id)
+         .eq("nutzer_id",userId)
+     }else{
+       await supabaseClient.from("bewertungen").insert({
+         bild_id:img.id,
+         nutzer_id:userId,
+         panorama:true
+       })
+     }
 
      loadImages(place)
-
    })
 
    actions.appendChild(fav)
@@ -314,11 +274,7 @@ async function addImage(place){
  const url=input.value.trim()
  if(!url) return
 
- await supabaseClient.from("bilder").insert({
-  ort:place,
-  url:url
- })
-
+ await supabaseClient.from("bilder").insert({ort:place,url:url})
  input.value=""
  loadImages(place)
 }
