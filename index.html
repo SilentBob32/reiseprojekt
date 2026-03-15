@@ -112,9 +112,10 @@ async function loadImages(place){
      .eq("bild_id", img.id)
 
    const myEntry = imgRatings.find(r => r.nutzer_id === userId)
-   const isFavorite = myEntry && myEntry.favorite === true
-   const isPanorama = myEntry && myEntry.panorama === true
-   const myRating = myEntry ? myEntry.rating : 0
+
+   const isFavorite = myEntry?.favorite === true
+   const isPanorama = myEntry?.panorama === true
+   const myRating = myEntry?.rating || 0
 
    const card=document.createElement("div")
    card.className="card"
@@ -199,6 +200,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Salzburg</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/salzburg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/salzburg5/320/240"></div>
+</div>
+
 <div>
 <input id="salzburg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="salzburg">Hinzufügen</button>
@@ -210,6 +219,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Hamburg</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/hamburg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/hamburg5/320/240"></div>
+</div>
 
 <div>
 <input id="hamburg_input" placeholder="Bildlink einfügen">
@@ -223,6 +240,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Bratislava</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/bratislava1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bratislava5/320/240"></div>
+</div>
+
 <div>
 <input id="bratislava_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="bratislava">Hinzufügen</button>
@@ -234,6 +259,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Karlsbad</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/karlsbad1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/karlsbad5/320/240"></div>
+</div>
 
 <div>
 <input id="karlsbad_input" placeholder="Bildlink einfügen">
@@ -247,6 +280,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Bad Flinsberg</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20flinsberg5/320/240"></div>
+</div>
+
 <div>
 <input id="bad_flinsberg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="bad_flinsberg">Hinzufügen</button>
@@ -258,6 +299,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Kirschau</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/kirschau1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/kirschau5/320/240"></div>
+</div>
 
 <div>
 <input id="kirschau_input" placeholder="Bildlink einfügen">
@@ -271,6 +320,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Bad Staffelstein</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/bad%20staffelstein5/320/240"></div>
+</div>
+
 <div>
 <input id="bad_staffelstein_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="bad_staffelstein">Hinzufügen</button>
@@ -282,6 +339,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Weimar</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/weimar1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/weimar5/320/240"></div>
+</div>
 
 <div>
 <input id="weimar_input" placeholder="Bildlink einfügen">
@@ -295,6 +360,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Erfurt</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/erfurt1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/erfurt5/320/240"></div>
+</div>
+
 <div>
 <input id="erfurt_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="erfurt">Hinzufügen</button>
@@ -306,6 +379,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Dresden</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/dresden1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/dresden5/320/240"></div>
+</div>
 
 <div>
 <input id="dresden_input" placeholder="Bildlink einfügen">
@@ -319,6 +400,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Breslau</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/breslau1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/breslau5/320/240"></div>
+</div>
+
 <div>
 <input id="breslau_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="breslau">Hinzufügen</button>
@@ -330,6 +419,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Prag</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/prag1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/prag5/320/240"></div>
+</div>
 
 <div>
 <input id="prag_input" placeholder="Bildlink einfügen">
@@ -343,6 +440,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Nuernberg</summary>
 
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/nuernberg1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/nuernberg5/320/240"></div>
+</div>
+
 <div>
 <input id="nuernberg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="nuernberg">Hinzufügen</button>
@@ -354,6 +459,14 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Wien</summary>
+
+<div class="grid">
+<div class="card"><img src="https://picsum.photos/seed/wien1/640/360"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien2/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien3/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien4/320/240"></div>
+<div class="card"><img src="https://picsum.photos/seed/wien5/320/240"></div>
+</div>
 
 <div>
 <input id="wien_input" placeholder="Bildlink einfügen">
