@@ -25,7 +25,7 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .ratingDisplay {font-size:12px;margin-top:4px}
 
 .actions {font-size:12px;margin-top:4px}
-.actions span {cursor:pointer;margin-right:8px}
+.actions span {cursor:pointer;margin-right:10px}
 
 #preview {
  display:none;
@@ -43,14 +43,12 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 #preview img {
  max-width:90vw;
  max-height:90vh;
- z-index:1000000;
 }
 
 body.preview-open {overflow:hidden}
 
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
 #currentUser {margin-bottom:20px;font-weight:bold}
-button.switchUser {margin-left:15px}
 
 </style>
 </head>
@@ -130,7 +128,7 @@ function changeUser(){
 function showUser(){
  document.getElementById("userSelect").style.display="none"
  document.getElementById("currentUser").innerHTML =
-   "Angemeldet als: "+userName+" <button class='switchUser' onclick='changeUser()'>Nutzer wechseln</button>"
+   "Angemeldet als: "+userName+" <button onclick='changeUser()'>Nutzer wechseln</button>"
 }
 
 function openPreview(src){
@@ -175,23 +173,32 @@ async function loadImages(place){
    remove.className="remove"
    remove.textContent="✕"
 
-   remove.onclick=async()=>{
-     await supabaseClient.from("bilder").delete().eq("id",img.id)
+   remove.addEventListener("click", async ()=>{
+     const {error} = await supabaseClient
+       .from("bilder")
+       .delete()
+       .eq("id",img.id)
+
+     if(error) alert("Fehler beim Löschen: "+error.message)
+
      loadImages(place)
-   }
+   })
 
    const image=document.createElement("img")
    image.src=img.url
    image.onclick=()=>openPreview(img.url)
 
-   const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id && r.rating) : []
+   const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
 
    let avg=0
-   if(imgRatings.length){
-     avg = imgRatings.reduce((a,b)=>a+b.rating,0)/imgRatings.length
+   const validRatings = imgRatings.filter(r=>r.rating)
+   if(validRatings.length){
+     avg = validRatings.reduce((a,b)=>a+b.rating,0)/validRatings.length
    }
 
-   const myRating = ratings ? ratings.find(r=>r.bild_id===img.id && r.nutzer_id===userId) : null
+   const myRating = imgRatings.find(r=>r.nutzer_id===userId)
+   const myFavorite = imgRatings.find(r=>r.nutzer_id===userId && r.favorite)
+   const myPanorama = imgRatings.find(r=>r.nutzer_id===userId && r.panorama)
 
    const ratingDiv=document.createElement("div")
    ratingDiv.className="rating"
@@ -200,46 +207,57 @@ async function loadImages(place){
      const star=document.createElement("span")
      star.textContent = myRating && myRating.rating>=i ? "★":"☆"
 
-     star.onclick=async()=>{
-       await supabaseClient.from("bewertungen").upsert({
-         bild_id:img.id,
-         nutzer_id:userId,
-         rating:i
-       })
+     star.addEventListener("click", async ()=>{
+       await supabaseClient
+        .from("bewertungen")
+        .upsert({
+          bild_id:img.id,
+          nutzer_id:userId,
+          rating:i
+        }, { onConflict:"bild_id,nutzer_id" })
+
        loadImages(place)
-     }
+     })
 
      ratingDiv.appendChild(star)
    }
 
    const ratingInfo=document.createElement("div")
    ratingInfo.className="ratingDisplay"
-   ratingInfo.textContent = "Ø "+avg.toFixed(1)+" ("+imgRatings.length+" Bewertungen)"
+   ratingInfo.textContent="Ø "+avg.toFixed(1)+" ("+validRatings.length+" Bewertungen)"
 
    const actions=document.createElement("div")
    actions.className="actions"
 
    const fav=document.createElement("span")
-   fav.textContent="⭐ Favorit"
+   fav.textContent = myFavorite ? "⭐ Favorit ✓" : "⭐ Favorit"
 
-   fav.onclick=async()=>{
-     await supabaseClient.from("bewertungen").upsert({
-       bild_id:img.id,
-       nutzer_id:userId,
-       favorite:true
-     })
-   }
+   fav.addEventListener("click", async ()=>{
+     await supabaseClient
+       .from("bewertungen")
+       .upsert({
+         bild_id:img.id,
+         nutzer_id:userId,
+         favorite: !myFavorite
+       }, { onConflict:"bild_id,nutzer_id" })
+
+     loadImages(place)
+   })
 
    const pano=document.createElement("span")
-   pano.textContent="🌄 Panorama"
+   pano.textContent = myPanorama ? "🌄 Panorama ✓" : "🌄 Panorama"
 
-   pano.onclick=async()=>{
-     await supabaseClient.from("bewertungen").upsert({
-       bild_id:img.id,
-       nutzer_id:userId,
-       panorama:true
-     })
-   }
+   pano.addEventListener("click", async ()=>{
+     await supabaseClient
+       .from("bewertungen")
+       .upsert({
+         bild_id:img.id,
+         nutzer_id:userId,
+         panorama: !myPanorama
+       }, { onConflict:"bild_id,nutzer_id" })
+
+     loadImages(place)
+   })
 
    actions.appendChild(fav)
    actions.appendChild(pano)
