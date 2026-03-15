@@ -3,256 +3,214 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Reisebild Auswahl Tool</title>
+<title>Reisebild Pool</title>
 <style>
-body{
- font-family:Arial,Helvetica,sans-serif;
- background:#f5f2eb;
- margin:40px;
-}
-h1{color:#b22222;margin-bottom:5px}
-.subtitle{color:#555;margin-bottom:25px}
-
-details{
- background:white;
- padding:15px;
- margin-bottom:25px;
- border-radius:10px;
- box-shadow:0 2px 6px rgba(0,0,0,0.15);
-}
-
-summary{
- font-size:20px;
- font-weight:bold;
- cursor:pointer;
-}
-
-.counter{
- font-size:13px;
- color:#666;
- margin-left:10px;
-}
-
-.grid{
- display:grid;
- grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
- gap:12px;
- margin-top:15px;
-}
-
-.card{
- background:#fafafa;
- border-radius:8px;
- padding:6px;
- position:relative;
-}
-
-.card img{
- width:100%;
- height:120px;
- object-fit:cover;
- border-radius:6px;
-}
-
-.caption{
- font-size:11px;
- margin-top:4px;
- word-break:break-all;
-}
-
-.remove{
- position:absolute;
- top:4px;
- right:6px;
- color:#b22222;
- font-weight:bold;
- cursor:pointer;
-}
-
-.rating span{
- cursor:pointer;
- font-size:16px;
-}
-
-.favorite{
- cursor:pointer;
- font-size:14px;
-}
-
-.search{
- margin-top:10px;
- font-size:13px;
-}
-
-input{
- width:65%;
- padding:5px;
- margin-top:8px;
-}
-
-button{
- padding:6px 10px;
- margin-left:6px;
- cursor:pointer;
-}
-
+body{font-family:Arial;background:#f5f2eb;margin:40px}
+h1{color:#b22222}
+details{background:white;margin-bottom:25px;padding:15px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+summary{font-size:20px;font-weight:bold;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:12px}
+.card{background:#fafafa;border-radius:8px;padding:6px;position:relative}
+.card img{width:100%;height:120px;object-fit:cover;border-radius:6px}
+.caption{font-size:11px;margin-top:4px;word-break:break-all}
+.remove{position:absolute;top:4px;right:6px;color:#b22222;cursor:pointer;font-weight:bold}
+.rating span{cursor:pointer;font-size:16px}
+.favorite{cursor:pointer;font-size:14px}
+input{width:65%;padding:6px;margin-top:8px}
+button{padding:6px 10px;margin-left:6px}
+.search{font-size:13px;margin-top:10px}
+.topbar{margin-bottom:20px}
 </style>
-
-<script>
-
-function storageKey(place){
- return "travel_images_"+place;
-}
-
-function loadImages(place){
- const container = document.getElementById(place+"_list");
- const counter = document.getElementById(place+"_count");
- const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
-
- data.forEach(obj=>createCard(place,obj.url,obj.rating,obj.favorite,false));
-
- counter.innerText = data.length + " Bilder gesammelt";
-}
-
-function addImage(place){
-
- const input=document.getElementById(place+"_input");
- const url=input.value.trim();
-
- if(!url) return;
-
- createCard(place,url,0,false,true);
-
- input.value="";
-}
-
-function createCard(place,url,rating,favorite,save){
-
- const container=document.getElementById(place+"_list");
- const counter=document.getElementById(place+"_count");
-
- const card=document.createElement("div");
- card.className="card";
-
- const remove=document.createElement("div");
- remove.className="remove";
- remove.innerText="✕";
-
- const img=document.createElement("img");
- img.src=url;
-
- const caption=document.createElement("div");
- caption.className="caption";
- caption.innerText=url;
-
- const ratingDiv=document.createElement("div");
- ratingDiv.className="rating";
-
- let stars=[];
-
- for(let i=1;i<=5;i++){
-   const s=document.createElement("span");
-   s.innerText = (i<=rating) ? "★" : "☆";
-   s.onclick=function(){
-     stars.forEach((st,j)=>{
-       st.innerText = (j<i) ? "★":"☆";
-     });
-     rating=i;
-     saveState();
-   };
-   stars.push(s);
-   ratingDiv.appendChild(s);
- }
-
- const fav=document.createElement("div");
- fav.className="favorite";
- fav.innerText = favorite ? "⭐ Favorit" : "☆ Favorit";
- fav.onclick=function(){
-   favorite=!favorite;
-   fav.innerText = favorite ? "⭐ Favorit":"☆ Favorit";
-   saveState();
- };
-
- remove.onclick=function(){
-   card.remove();
-   saveState();
- };
-
- function saveState(){
-
-   const cards=container.querySelectorAll(".card");
-
-   let list=[];
-
-   cards.forEach(c=>{
-
-     const img=c.querySelector("img").src;
-     const fav=c.querySelector(".favorite").innerText.includes("⭐");
-     const stars=[...c.querySelectorAll(".rating span")].filter(s=>s.innerText==="★").length;
-
-     list.push({url:img,rating:stars,favorite:fav});
-
-   });
-
-   localStorage.setItem(storageKey(place),JSON.stringify(list));
-   counter.innerText = list.length + " Bilder gesammelt";
-
- }
-
- card.appendChild(remove);
- card.appendChild(img);
- card.appendChild(caption);
- card.appendChild(ratingDiv);
- card.appendChild(fav);
-
- container.appendChild(card);
-
- if(save) saveState();
-
-}
-
-</script>
 </head>
 
 <body>
 
-<h1>Reisebild Auswahl Tool</h1>
-<div class="subtitle">
-Bilder sammeln, bewerten und Favoriten markieren. Alles wird lokal im Browser gespeichert.
+<h1>Reisebild Pool</h1>
+<div class="topbar">
+<button id="exportBtn">Bildpool exportieren</button>
+<input type="file" id="importFile">
 </div>
 
+<script>
 
-<details>
-<summary>Salzburg<span class="counter" id="salzburg_count">0 Bilder gesammelt</span></summary>
+function storageKey(place){ return "reisebilder_"+place }
 
-<div class="grid">
+function loadSharedPool(){
+ fetch("bildpool.json")
+ .then(r=>r.json())
+ .then(data=>{
+   for(const place in data){
+     const list=data[place];
+     list.forEach(url=>createCard(place,url,0,false,false));
+   }
+ })
+ .catch(()=>{})
+}
 
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/salzburg?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/salzburg?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/salzburg?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/salzburg?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/salzburg?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+function loadLocal(place){
+ const saved=JSON.parse(localStorage.getItem(storageKey(place))||"[]")
+ saved.forEach(obj=>createCard(place,obj.url,obj.rating,obj.favorite,false))
+}
+
+function saveState(place){
+
+ const container=document.getElementById(place+"_list")
+ const cards=[...container.querySelectorAll(".card")]
+ let data=[]
+
+ cards.forEach(c=>{
+
+   const url=c.querySelector("img").src
+   const fav=c.querySelector(".favorite").dataset.state==="1"
+   const rating=[...c.querySelectorAll(".rating span")].filter(s=>s.textContent==="★").length
+
+   data.push({url,rating,favorite:fav})
+
+ })
+
+ localStorage.setItem(storageKey(place),JSON.stringify(data))
+}
+
+function addImage(place){
+
+ const input=document.getElementById(place+"_input")
+ const url=input.value.trim()
+ if(!url) return
+
+ createCard(place,url,0,false,true)
+ input.value=""
+}
+
+function createCard(place,url,rating,favorite,save){
+
+ const container=document.getElementById(place+"_list")
+
+ const card=document.createElement("div")
+ card.className="card"
+
+ const remove=document.createElement("div")
+ remove.className="remove"
+ remove.textContent="✕"
+ remove.onclick=function(){
+   card.remove()
+   saveState(place)
+ }
+
+ const img=document.createElement("img")
+ img.src=url
+
+ const cap=document.createElement("div")
+ cap.className="caption"
+ cap.textContent=url
+
+ const ratingDiv=document.createElement("div")
+ ratingDiv.className="rating"
+
+ let stars=[]
+
+ for(let i=1;i<=5;i++){
+   const s=document.createElement("span")
+   s.textContent=(i<=rating)?"★":"☆"
+   s.addEventListener("click",function(){
+      stars.forEach((st,j)=>{
+         st.textContent=(j<i)?"★":"☆"
+      })
+      saveState(place)
+   })
+   stars.push(s)
+   ratingDiv.appendChild(s)
+ }
+
+ const fav=document.createElement("div")
+ fav.className="favorite"
+ fav.dataset.state=favorite?"1":"0"
+ fav.textContent=favorite?"⭐ Favorit":"☆ Favorit"
+
+ fav.addEventListener("click",function(){
+   if(fav.dataset.state==="1"){
+      fav.dataset.state="0"
+      fav.textContent="☆ Favorit"
+   }else{
+      fav.dataset.state="1"
+      fav.textContent="⭐ Favorit"
+   }
+   saveState(place)
+ })
+
+ card.appendChild(remove)
+ card.appendChild(img)
+ card.appendChild(cap)
+ card.appendChild(ratingDiv)
+ card.appendChild(fav)
+
+ container.appendChild(card)
+
+ if(save) saveState(place)
+}
+
+function exportPool(){
+
+ let result={}
+
+ document.querySelectorAll("[data-place]").forEach(section=>{
+
+   const place=section.dataset.place
+   const cards=[...section.querySelectorAll(".card")]
+
+   result[place]=cards.map(c=>c.querySelector("img").src)
+
+ })
+
+ const blob=new Blob([JSON.stringify(result,null,2)],{type:"application/json"})
+ const a=document.createElement("a")
+ a.href=URL.createObjectURL(blob)
+ a.download="bildpool.json"
+ a.click()
+}
+
+document.addEventListener("DOMContentLoaded",function(){
+
+ document.getElementById("exportBtn").addEventListener("click",exportPool)
+
+ const importInput=document.getElementById("importFile")
+
+ importInput.addEventListener("change",function(){
+
+  const file=importInput.files[0]
+  if(!file) return
+
+  const reader=new FileReader()
+
+  reader.onload=function(){
+    const data=JSON.parse(reader.result)
+    for(const place in data){
+      data[place].forEach(url=>createCard(place,url,0,false,true))
+    }
+  }
+
+  reader.readAsText(file)
+
+ })
+
+ document.querySelectorAll(".addButton").forEach(btn=>{
+   btn.addEventListener("click",function(){
+      const place=btn.dataset.place
+      addImage(place)
+   })
+ })
+
+ loadSharedPool()
+
+ document.querySelectorAll("[data-place]").forEach(sec=>{
+   loadLocal(sec.dataset.place)
+ })
+
+})
+
+</script>
+
+<details data-place="salzburg">
+<summary>Salzburg</summary>
 
 <div class="search">
 Suche:
@@ -262,48 +220,15 @@ Suche:
 
 <div>
 <input id="salzburg_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('salzburg')">Hinzufügen</button>
+<button class="addButton" data-place="salzburg">Hinzufügen</button>
 </div>
 
 <div class="grid" id="salzburg_list"></div>
 
-<script>loadImages("salzburg")</script>
-
 </details>
 
-
-
-<details>
-<summary>Hamburg<span class="counter" id="hamburg_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/hamburg?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/hamburg?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/hamburg?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/hamburg?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/hamburg?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="hamburg">
+<summary>Hamburg</summary>
 
 <div class="search">
 Suche:
@@ -313,48 +238,15 @@ Suche:
 
 <div>
 <input id="hamburg_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('hamburg')">Hinzufügen</button>
+<button class="addButton" data-place="hamburg">Hinzufügen</button>
 </div>
 
 <div class="grid" id="hamburg_list"></div>
 
-<script>loadImages("hamburg")</script>
-
 </details>
 
-
-
-<details>
-<summary>Bratislava<span class="counter" id="bratislava_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bratislava?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bratislava?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bratislava?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bratislava?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bratislava?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="bratislava">
+<summary>Bratislava</summary>
 
 <div class="search">
 Suche:
@@ -364,48 +256,15 @@ Suche:
 
 <div>
 <input id="bratislava_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('bratislava')">Hinzufügen</button>
+<button class="addButton" data-place="bratislava">Hinzufügen</button>
 </div>
 
 <div class="grid" id="bratislava_list"></div>
 
-<script>loadImages("bratislava")</script>
-
 </details>
 
-
-
-<details>
-<summary>Karlsbad<span class="counter" id="karlsbad_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/karlsbad?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/karlsbad?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/karlsbad?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/karlsbad?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/karlsbad?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="karlsbad">
+<summary>Karlsbad</summary>
 
 <div class="search">
 Suche:
@@ -415,48 +274,15 @@ Suche:
 
 <div>
 <input id="karlsbad_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('karlsbad')">Hinzufügen</button>
+<button class="addButton" data-place="karlsbad">Hinzufügen</button>
 </div>
 
 <div class="grid" id="karlsbad_list"></div>
 
-<script>loadImages("karlsbad")</script>
-
 </details>
 
-
-
-<details>
-<summary>Bad Flinsberg<span class="counter" id="bad_flinsberg_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="bad_flinsberg">
+<summary>Bad Flinsberg</summary>
 
 <div class="search">
 Suche:
@@ -466,48 +292,15 @@ Suche:
 
 <div>
 <input id="bad_flinsberg_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('bad_flinsberg')">Hinzufügen</button>
+<button class="addButton" data-place="bad_flinsberg">Hinzufügen</button>
 </div>
 
 <div class="grid" id="bad_flinsberg_list"></div>
 
-<script>loadImages("bad_flinsberg")</script>
-
 </details>
 
-
-
-<details>
-<summary>Kirschau<span class="counter" id="kirschau_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/kirschau?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/kirschau?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/kirschau?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/kirschau?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/kirschau?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="kirschau">
+<summary>Kirschau</summary>
 
 <div class="search">
 Suche:
@@ -517,48 +310,15 @@ Suche:
 
 <div>
 <input id="kirschau_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('kirschau')">Hinzufügen</button>
+<button class="addButton" data-place="kirschau">Hinzufügen</button>
 </div>
 
 <div class="grid" id="kirschau_list"></div>
 
-<script>loadImages("kirschau")</script>
-
 </details>
 
-
-
-<details>
-<summary>Bad Staffelstein<span class="counter" id="bad_staffelstein_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="bad_staffelstein">
+<summary>Bad Staffelstein</summary>
 
 <div class="search">
 Suche:
@@ -568,48 +328,15 @@ Suche:
 
 <div>
 <input id="bad_staffelstein_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('bad_staffelstein')">Hinzufügen</button>
+<button class="addButton" data-place="bad_staffelstein">Hinzufügen</button>
 </div>
 
 <div class="grid" id="bad_staffelstein_list"></div>
 
-<script>loadImages("bad_staffelstein")</script>
-
 </details>
 
-
-
-<details>
-<summary>Weimar<span class="counter" id="weimar_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/weimar?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/weimar?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/weimar?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/weimar?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/weimar?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="weimar">
+<summary>Weimar</summary>
 
 <div class="search">
 Suche:
@@ -619,48 +346,15 @@ Suche:
 
 <div>
 <input id="weimar_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('weimar')">Hinzufügen</button>
+<button class="addButton" data-place="weimar">Hinzufügen</button>
 </div>
 
 <div class="grid" id="weimar_list"></div>
 
-<script>loadImages("weimar")</script>
-
 </details>
 
-
-
-<details>
-<summary>Erfurt<span class="counter" id="erfurt_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/erfurt?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/erfurt?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/erfurt?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/erfurt?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/erfurt?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="erfurt">
+<summary>Erfurt</summary>
 
 <div class="search">
 Suche:
@@ -670,48 +364,15 @@ Suche:
 
 <div>
 <input id="erfurt_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('erfurt')">Hinzufügen</button>
+<button class="addButton" data-place="erfurt">Hinzufügen</button>
 </div>
 
 <div class="grid" id="erfurt_list"></div>
 
-<script>loadImages("erfurt")</script>
-
 </details>
 
-
-
-<details>
-<summary>Dresden<span class="counter" id="dresden_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/dresden?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/dresden?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/dresden?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/dresden?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/dresden?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="dresden">
+<summary>Dresden</summary>
 
 <div class="search">
 Suche:
@@ -721,48 +382,15 @@ Suche:
 
 <div>
 <input id="dresden_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('dresden')">Hinzufügen</button>
+<button class="addButton" data-place="dresden">Hinzufügen</button>
 </div>
 
 <div class="grid" id="dresden_list"></div>
 
-<script>loadImages("dresden")</script>
-
 </details>
 
-
-
-<details>
-<summary>Breslau<span class="counter" id="breslau_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/breslau?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/breslau?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/breslau?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/breslau?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/breslau?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="breslau">
+<summary>Breslau</summary>
 
 <div class="search">
 Suche:
@@ -772,48 +400,15 @@ Suche:
 
 <div>
 <input id="breslau_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('breslau')">Hinzufügen</button>
+<button class="addButton" data-place="breslau">Hinzufügen</button>
 </div>
 
 <div class="grid" id="breslau_list"></div>
 
-<script>loadImages("breslau")</script>
-
 </details>
 
-
-
-<details>
-<summary>Prag<span class="counter" id="prag_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/prag?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/prag?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/prag?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/prag?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/prag?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="prag">
+<summary>Prag</summary>
 
 <div class="search">
 Suche:
@@ -823,48 +418,15 @@ Suche:
 
 <div>
 <input id="prag_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('prag')">Hinzufügen</button>
+<button class="addButton" data-place="prag">Hinzufügen</button>
 </div>
 
 <div class="grid" id="prag_list"></div>
 
-<script>loadImages("prag")</script>
-
 </details>
 
-
-
-<details>
-<summary>Nuernberg<span class="counter" id="nuernberg_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/nuernberg?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/nuernberg?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/nuernberg?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/nuernberg?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/nuernberg?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="nuernberg">
+<summary>Nuernberg</summary>
 
 <div class="search">
 Suche:
@@ -874,48 +436,15 @@ Suche:
 
 <div>
 <input id="nuernberg_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('nuernberg')">Hinzufügen</button>
+<button class="addButton" data-place="nuernberg">Hinzufügen</button>
 </div>
 
 <div class="grid" id="nuernberg_list"></div>
 
-<script>loadImages("nuernberg")</script>
-
 </details>
 
-
-
-<details>
-<summary>Wien<span class="counter" id="wien_count">0 Bilder gesammelt</span></summary>
-
-<div class="grid">
-
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/wien?lock=1">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/wien?lock=2">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/wien?lock=3">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/wien?lock=4">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-        <div class="card">
-        <img src="https://loremflickr.com/320/240/wien?lock=5">
-        <div class="caption">Beispielbild</div>
-        </div>
-        
-</div>
+<details data-place="wien">
+<summary>Wien</summary>
 
 <div class="search">
 Suche:
@@ -925,13 +454,10 @@ Suche:
 
 <div>
 <input id="wien_input" placeholder="Bildlink einfügen">
-<button onclick="addImage('wien')">Hinzufügen</button>
+<button class="addButton" data-place="wien">Hinzufügen</button>
 </div>
 
 <div class="grid" id="wien_list"></div>
 
-<script>loadImages("wien")</script>
-
 </details>
-
 </body></html>
