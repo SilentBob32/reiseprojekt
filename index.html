@@ -24,14 +24,16 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .rating span {cursor:pointer;font-size:20px}
 .ratingDisplay {font-size:12px;margin-top:4px}
 
-.actions span {
-cursor:pointer;
-margin-right:12px;
-font-size:14px;
+.actions {margin-top:6px;font-size:14px;color:black}
+
+.icon {
+color:#bbb;
+font-size:16px;
+margin-right:6px;
 }
 
-.favorite-active {color:gold;font-weight:bold}
-.panorama-active {color:#2a7cff;font-weight:bold}
+.icon.active-fav {color:gold}
+.icon.active-panorama {color:#2a7cff}
 
 #preview {
 display:none;
@@ -102,9 +104,8 @@ async function setUser(){
 
  let uid
 
- if(data){
-   uid=data.id
- }else{
+ if(data){ uid=data.id }
+ else{
    const {data:ins} = await supabaseClient
      .from("nutzer")
      .insert({name:name})
@@ -174,9 +175,23 @@ async function loadImages(place){
    remove.textContent="✕"
 
    remove.addEventListener("click", async ()=>{
-     const {error} = await supabaseClient.from("bilder").delete().eq("id",img.id)
+
+     if(!confirm("Bild wirklich löschen?")) return
+
+     await supabaseClient
+       .from("bewertungen")
+       .delete()
+       .eq("bild_id",img.id)
+
+     const {error} = await supabaseClient
+       .from("bilder")
+       .delete()
+       .eq("id",img.id)
+
      if(error) alert(error.message)
+
      loadImages(place)
+
    })
 
    const image=document.createElement("img")
@@ -184,14 +199,11 @@ async function loadImages(place){
    image.onclick=()=>openPreview(img.url)
 
    const imgRatings = ratings ? ratings.filter(r=>r.bild_id===img.id) : []
-
    const myEntry = imgRatings.find(r=>r.nutzer_id===userId)
 
    let avg=0
-   const valid = imgRatings.filter(r=>r.rating)
-   if(valid.length){
-     avg = valid.reduce((a,b)=>a+b.rating,0)/valid.length
-   }
+   const valid=imgRatings.filter(r=>r.rating)
+   if(valid.length) avg=valid.reduce((a,b)=>a+b.rating,0)/valid.length
 
    const ratingDiv=document.createElement("div")
    ratingDiv.className="rating"
@@ -233,37 +245,42 @@ async function loadImages(place){
    actions.className="actions"
 
    const fav=document.createElement("span")
-   fav.textContent="⭐ Favorit"
-   if(myEntry && myEntry.favorite) fav.classList.add("favorite-active")
+   const favIcon=document.createElement("span")
+   favIcon.className="icon "+(myEntry && myEntry.favorite ? "active-fav":"")
+   favIcon.textContent="⭐"
+   fav.appendChild(favIcon)
+   fav.append(" Favorit")
 
    fav.addEventListener("click", async ()=>{
 
-     if(myEntry){
-       await supabaseClient
-         .from("bewertungen")
-         .update({favorite: !myEntry.favorite})
-         .eq("bild_id",img.id)
-         .eq("nutzer_id",userId)
-     }
+     if(!myEntry) return
+
+     await supabaseClient
+       .from("bewertungen")
+       .update({favorite:!myEntry.favorite})
+       .eq("bild_id",img.id)
+       .eq("nutzer_id",userId)
 
      loadImages(place)
 
    })
 
    const pano=document.createElement("span")
-   pano.textContent="🌄 Panorama"
-   if(myEntry && myEntry.panorama) pano.classList.add("panorama-active")
+   const panoIcon=document.createElement("span")
+   panoIcon.className="icon "+(myEntry && myEntry.panorama ? "active-panorama":"")
+   panoIcon.textContent="🌄"
+   pano.appendChild(panoIcon)
+   pano.append(" Panorama")
 
    pano.addEventListener("click", async ()=>{
 
-     // reset other panorama for this place
-     const ids = images.map(i=>i.id)
+     const placeIds = images.map(i=>i.id)
 
      await supabaseClient
        .from("bewertungen")
        .update({panorama:false})
        .eq("nutzer_id",userId)
-       .in("bild_id",ids)
+       .in("bild_id",placeIds)
 
      await supabaseClient
        .from("bewertungen")
@@ -312,18 +329,7 @@ function registerButtons(){
  })
 }
 
-function init(){
- places.forEach(p=>loadImages(p))
-}
-
-function enableRealtime(){
- supabaseClient
-  .channel('bilder-live')
-  .on('postgres_changes',{event:'*',schema:'public',table:'bilder'},payload=>{
-     places.forEach(p=>loadImages(p))
-  })
-  .subscribe()
-}
+function init(){ places.forEach(p=>loadImages(p)) }
 
 document.addEventListener("DOMContentLoaded",()=>{
 
@@ -335,8 +341,6 @@ document.addEventListener("DOMContentLoaded",()=>{
    showUser()
    init()
  }
-
- enableRealtime()
 
 })
 
