@@ -22,6 +22,7 @@ button {padding:6px 10px;margin-left:6px}
 #preview {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);align-items:center;justify-content:center}
 #preview img {max-width:90%;max-height:90%}
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
+#currentUser {margin-bottom:20px;font-weight:bold}
 </style>
 </head>
 
@@ -29,10 +30,12 @@ button {padding:6px 10px;margin-left:6px}
 
 <h1>Reiseprojekt Bildpool</h1>
 
+<div id="currentUser"></div>
+
 <div id="userSelect">
 <strong>Nutzer auswählen:</strong><br><br>
 <select id="userDropdown"></select>
-<button onclick="setUser()">Bestätigen</button>
+<button id="confirmUser">Bestätigen</button>
 </div>
 
 <div id="preview"><img id="previewimg"></div>
@@ -50,140 +53,138 @@ const users = ["Jens", "Simone", "Stephan", "Steffen", "Nobody1", "Nobody2", "No
 let userId = localStorage.getItem("reise_user")
 let userName = localStorage.getItem("reise_user_name")
 
-function populateUsers(){
- const dd=document.getElementById("userDropdown")
- users.forEach(n=>{
-   const opt=document.createElement("option")
-   opt.value=n
-   opt.textContent=n
+function populateUsers() {
+ const dd = document.getElementById("userDropdown")
+ dd.innerHTML = ""
+ users.forEach(name => {
+   const opt = document.createElement("option")
+   opt.value = name
+   opt.textContent = name
    dd.appendChild(opt)
  })
 }
 
-async function setUser(){
- const name=document.getElementById("userDropdown").value
- userName=name
- localStorage.setItem("reise_user_name",name)
+async function setUser() {
+ const name = document.getElementById("userDropdown").value
+ userName = name
+ localStorage.setItem("reise_user_name", name)
 
- const {data} = await supabase
+ const { data } = await supabase
    .from("nutzer")
    .select("*")
-   .eq("name",name)
+   .eq("name", name)
    .maybeSingle()
 
  let uid
 
- if(data){
-   uid=data.id
- }else{
-   const {data:ins} = await supabase
+ if (data) {
+   uid = data.id
+ } else {
+   const { data: ins } = await supabase
       .from("nutzer")
-      .insert({name:name})
+      .insert({ name: name })
       .select()
       .single()
-   uid=ins.id
+   uid = ins.id
  }
 
- userId=uid
- localStorage.setItem("reise_user",uid)
- document.getElementById("userSelect").style.display="none"
+ userId = uid
+ localStorage.setItem("reise_user", uid)
+
+ document.getElementById("userSelect").style.display = "none"
+ document.getElementById("currentUser").textContent = "Angemeldet als: " + userName + " (Nutzer wechseln: Seite neu laden)"
  init()
 }
 
-function openPreview(src){
- const p=document.getElementById("preview")
- document.getElementById("previewimg").src=src
- p.style.display="flex"
+function openPreview(src) {
+ const p = document.getElementById("preview")
+ document.getElementById("previewimg").src = src
+ p.style.display = "flex"
 }
 
-document.addEventListener("click",e=>{
- if(e.target.id==="preview"){document.getElementById("preview").style.display="none"}
+document.addEventListener("click", e => {
+ if (e.target.id === "preview") {
+   document.getElementById("preview").style.display = "none"
+ }
 })
 
-async function loadImages(place){
+async function loadImages(place) {
 
- const {data} = await supabase
+ const { data } = await supabase
    .from("bilder")
    .select("*")
-   .eq("ort",place)
+   .eq("ort", place)
 
- const container=document.getElementById(place+"_list")
- container.innerHTML=""
+ const container = document.getElementById(place + "_list")
+ container.innerHTML = ""
 
- data.forEach(img=>{
-   createCard(place,img)
+ data.forEach(img => {
+   createCard(place, img)
  })
 
 }
 
-function createCard(place,img){
+function createCard(place, img) {
 
- const container=document.getElementById(place+"_list")
+ const container = document.getElementById(place + "_list")
 
- const card=document.createElement("div")
- card.className="card"
+ const card = document.createElement("div")
+ card.className = "card"
 
- const remove=document.createElement("div")
- remove.className="remove"
- remove.textContent="✕"
+ const remove = document.createElement("div")
+ remove.className = "remove"
+ remove.textContent = "✕"
 
- remove.onclick=async()=>{
-   await supabase.from("bilder").delete().eq("id",img.id)
+ remove.onclick = async () => {
+   await supabase.from("bilder").delete().eq("id", img.id)
    loadImages(place)
  }
 
- const image=document.createElement("img")
- image.src=img.url
- image.onclick=()=>openPreview(img.url)
+ const image = document.createElement("img")
+ image.src = img.url
+ image.onclick = () => openPreview(img.url)
 
- const rating=document.createElement("div")
- rating.className="rating"
+ const rating = document.createElement("div")
+ rating.className = "rating"
 
- for(let i=1;i<=5;i++){
+ for (let i = 1; i <= 5; i++) {
 
-  const s=document.createElement("span")
-  s.textContent="☆"
+  const s = document.createElement("span")
+  s.textContent = "☆"
 
-  s.onclick=async()=>{
-
+  s.onclick = async () => {
    await supabase.from("bewertungen").upsert({
-    bild_id:img.id,
-    nutzer_id:userId,
-    rating:i
+    bild_id: img.id,
+    nutzer_id: userId,
+    rating: i
    })
-
   }
 
   rating.appendChild(s)
-
  }
 
- const fav=document.createElement("div")
- fav.className="favorite"
- fav.textContent="⭐ Favorit"
+ const fav = document.createElement("div")
+ fav.className = "favorite"
+ fav.textContent = "⭐ Favorit"
 
- fav.onclick=async()=>{
-
+ fav.onclick = async () => {
   await supabase.from("bewertungen").upsert({
-   bild_id:img.id,
-   nutzer_id:userId,
-   favorite:true
+   bild_id: img.id,
+   nutzer_id: userId,
+   favorite: true
   })
-
  }
 
- const pano=document.createElement("div")
- pano.className="panorama"
- pano.textContent="🌄 Panorama"
+ const pano = document.createElement("div")
+ pano.className = "panorama"
+ pano.textContent = "🌄 Panorama"
 
- pano.onclick=async()=>{
-
+ pano.onclick = async () => {
   await supabase.from("bewertungen").upsert({
-   bild_id:img.id,
-   nutzer_id:userId,
-   panorama:true
+   bild_id: img.id,
+   nutzer_id: userId,
+   panorama: true
   })
-
  }
 
  card.appendChild(remove)
@@ -195,38 +196,40 @@ function createCard(place,img){
  container.appendChild(card)
 }
 
-async function addImage(place){
+async function addImage(place) {
 
- const input=document.getElementById(place+"_input")
- const url=input.value.trim()
+ const input = document.getElementById(place + "_input")
+ const url = input.value.trim()
 
- if(!url) return
+ if (!url) return
 
  await supabase.from("bilder").insert({
-  ort:place,
-  url:url
+  ort: place,
+  url: url
  })
 
- input.value=""
+ input.value = ""
  loadImages(place)
 }
 
-function init(){
+function init() {
 
- places.forEach(p=>loadImages(p))
+ places.forEach(p => loadImages(p))
 
- document.querySelectorAll(".addbtn").forEach(btn=>{
-  btn.onclick=()=>addImage(btn.dataset.place)
+ document.querySelectorAll(".addbtn").forEach(btn => {
+  btn.onclick = () => addImage(btn.dataset.place)
  })
-
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
 
  populateUsers()
 
- if(userId){
-   document.getElementById("userSelect").style.display="none"
+ document.getElementById("confirmUser").addEventListener("click", setUser)
+
+ if (userId && userName) {
+   document.getElementById("userSelect").style.display = "none"
+   document.getElementById("currentUser").textContent = "Angemeldet als: " + userName
    init()
  }
 
