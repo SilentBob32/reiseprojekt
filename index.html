@@ -13,14 +13,9 @@ body{
  margin:40px;
 }
 
-h1{
- color:#b22222;
- margin-bottom:10px;
-}
+h1{ color:#b22222; margin-bottom:10px; }
 
-.topbar{
- margin-bottom:25px;
-}
+.topbar{ margin-bottom:25px; }
 
 details{
  background:white;
@@ -30,11 +25,7 @@ details{
  box-shadow:0 2px 6px rgba(0,0,0,0.15);
 }
 
-summary{
- font-size:20px;
- font-weight:bold;
- cursor:pointer;
-}
+summary{ font-size:20px; font-weight:bold; cursor:pointer; }
 
 .counter{
  font-size:12px;
@@ -61,6 +52,7 @@ summary{
  height:120px;
  object-fit:cover;
  border-radius:6px;
+ cursor:pointer;
 }
 
 .caption{
@@ -78,20 +70,11 @@ summary{
  cursor:pointer;
 }
 
-.rating span{
- cursor:pointer;
- font-size:16px;
-}
+.rating span{ cursor:pointer; font-size:16px; }
 
-.favorite{
- cursor:pointer;
- font-size:14px;
-}
+.favorite{ cursor:pointer; font-size:14px; }
 
-.search{
- font-size:13px;
- margin-top:8px;
-}
+.search{ font-size:13px; margin-top:8px; }
 
 input{
  width:65%;
@@ -104,6 +87,29 @@ button{
  margin-left:6px;
  cursor:pointer;
 }
+
+/* Modal preview */
+
+#previewModal{
+ display:none;
+ position:fixed;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.8);
+ align-items:center;
+ justify-content:center;
+ z-index:999;
+}
+
+#previewModal img{
+ max-width:90%;
+ max-height:90%;
+ border-radius:10px;
+}
+
+#previewModal.closeable{ cursor:pointer; }
 
 </style>
 
@@ -118,6 +124,10 @@ button{
 <input type="file" id="importFile">
 </div>
 
+<div id="previewModal" class="closeable">
+<img id="previewImage">
+</div>
+
 <script>
 
 const places = ["salzburg", "hamburg", "bratislava", "karlsbad", "bad_flinsberg", "kirschau", "bad_staffelstein", "weimar", "erfurt", "dresden", "breslau", "prag", "nuernberg", "wien"];
@@ -125,6 +135,23 @@ const places = ["salzburg", "hamburg", "bratislava", "karlsbad", "bad_flinsberg"
 function storageKey(place){
  return "reisebilder_"+place;
 }
+
+function openPreview(src){
+ const modal=document.getElementById("previewModal");
+ const img=document.getElementById("previewImage");
+ img.src=src;
+ modal.style.display="flex";
+}
+
+function closePreview(){
+ document.getElementById("previewModal").style.display="none";
+}
+
+document.addEventListener("click",function(e){
+ if(e.target.id==="previewModal"){
+   closePreview();
+ }
+});
 
 function updateCounter(place){
  const data = JSON.parse(localStorage.getItem(storageKey(place)) || "[]");
@@ -171,6 +198,10 @@ function createCard(place,url,rating,favorite){
 
  const img=document.createElement("img");
  img.src=url;
+
+ img.addEventListener("click",()=>{
+   openPreview(url);
+ });
 
  const caption=document.createElement("div");
  caption.className="caption";
@@ -314,6 +345,16 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <summary>Salzburg <span class="counter" id="salzburg_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/salzburg?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/salzburg?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=salzburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -332,6 +373,16 @@ Suche:
 <details>
 
 <summary>Hamburg <span class="counter" id="hamburg_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/hamburg?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/hamburg?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
@@ -352,6 +403,16 @@ Suche:
 
 <summary>Bratislava <span class="counter" id="bratislava_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/bratislava?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bratislava?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=bratislava&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -370,6 +431,16 @@ Suche:
 <details>
 
 <summary>Karlsbad <span class="counter" id="karlsbad_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/karlsbad?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/karlsbad?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
@@ -390,6 +461,16 @@ Suche:
 
 <summary>Bad Flinsberg <span class="counter" id="bad_flinsberg_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/bad%20flinsberg?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20flinsberg?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=bad%20flinsberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -408,6 +489,16 @@ Suche:
 <details>
 
 <summary>Kirschau <span class="counter" id="kirschau_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/kirschau?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/kirschau?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
@@ -428,6 +519,16 @@ Suche:
 
 <summary>Bad Staffelstein <span class="counter" id="bad_staffelstein_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/bad%20staffelstein?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/bad%20staffelstein?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=bad%20staffelstein&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -446,6 +547,16 @@ Suche:
 <details>
 
 <summary>Weimar <span class="counter" id="weimar_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/weimar?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/weimar?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
@@ -466,6 +577,16 @@ Suche:
 
 <summary>Erfurt <span class="counter" id="erfurt_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/erfurt?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/erfurt?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=erfurt&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -484,6 +605,16 @@ Suche:
 <details>
 
 <summary>Dresden <span class="counter" id="dresden_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/dresden?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/dresden?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
@@ -504,6 +635,16 @@ Suche:
 
 <summary>Breslau <span class="counter" id="breslau_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/breslau?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/breslau?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=breslau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -522,6 +663,16 @@ Suche:
 <details>
 
 <summary>Prag <span class="counter" id="prag_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/prag?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/prag?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
@@ -542,6 +693,16 @@ Suche:
 
 <summary>Nuernberg <span class="counter" id="nuernberg_count">0 Bilder</span></summary>
 
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/nuernberg?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/nuernberg?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
+
 <div class="search">
 Suche:
 <a href="https://commons.wikimedia.org/w/index.php?search=nuernberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia</a> |
@@ -560,6 +721,16 @@ Suche:
 <details>
 
 <summary>Wien <span class="counter" id="wien_count">0 Bilder</span></summary>
+
+
+<div class="grid">
+<div class="card"><img src="https://loremflickr.com/640/360/wien?lock=1"><div class="caption">Panorama Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=2"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=3"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=4"><div class="caption">Highlight Beispiel</div></div>
+<div class="card"><img src="https://loremflickr.com/320/240/wien?lock=5"><div class="caption">Highlight Beispiel</div></div>
+</div>
+
 
 <div class="search">
 Suche:
