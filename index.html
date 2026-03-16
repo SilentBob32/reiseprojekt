@@ -12,8 +12,10 @@ h1 {color:#b22222}
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px}
 
-.card {background:#fafafa;padding:8px;border-radius:8px;border:1px solid #ddd}
+.card {background:#fafafa;padding:8px;border-radius:8px;border:1px solid #ddd;position:relative}
 .card img {width:100%;height:130px;object-fit:cover;border-radius:6px;cursor:pointer}
+
+.deleteBtn {position:absolute;top:6px;right:8px;color:#b22222;font-weight:bold;cursor:pointer;font-size:18px}
 
 .rating span {cursor:pointer;font-size:20px;color:#bbb}
 .rating span.active {color:#e0a800}
@@ -25,6 +27,7 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .icon.panorama {color:#2a7cff}
 
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
+
 #preview {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;z-index:9999}
 #preview img {max-width:90%;max-height:90%}
 .closePreview {position:absolute;top:20px;right:30px;color:white;font-size:30px;cursor:pointer}
@@ -103,14 +106,19 @@ function closePreview(){
  document.getElementById("preview").style.display="none"
 }
 
+async function deleteImage(bildId, place){
+
+ if(!confirm("Bild wirklich löschen?\nAlle Bewertungen werden ebenfalls entfernt.")) return
+
+ await supabaseClient.from("bewertungen").delete().eq("bild_id", bildId)
+ await supabaseClient.from("bilder").delete().eq("id", bildId)
+
+ loadImages(place)
+}
+
 async function saveRating(bild_id, rating){
 
- const {data} = await supabaseClient
-  .from("bewertungen")
-  .select("*")
-  .eq("bild_id", bild_id)
-  .eq("nutzer_id", userId)
-  .maybeSingle()
+ const {data} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", bild_id).eq("nutzer_id", userId).maybeSingle()
 
  if(data){
    await supabaseClient.from("bewertungen").update({rating:rating}).eq("id",data.id)
@@ -121,20 +129,12 @@ async function saveRating(bild_id, rating){
 
 async function toggleFavorite(bild_id,current){
 
- const {data} = await supabaseClient
-  .from("bewertungen")
-  .select("*")
-  .eq("bild_id", bild_id)
-  .eq("nutzer_id", userId)
-  .maybeSingle()
+ const {data} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", bild_id).eq("nutzer_id", userId).maybeSingle()
 
  if(data){
-   await supabaseClient.from("bewertungen")
-   .update({favorite:!current})
-   .eq("id",data.id)
+   await supabaseClient.from("bewertungen").update({favorite:!current}).eq("id",data.id)
  } else {
-   await supabaseClient.from("bewertungen")
-   .insert({bild_id:bild_id,nutzer_id:userId,favorite:true})
+   await supabaseClient.from("bewertungen").insert({bild_id:bild_id,nutzer_id:userId,favorite:true})
  }
 }
 
@@ -144,27 +144,15 @@ async function togglePanorama(place,bild_id,current){
    const {data:images} = await supabaseClient.from("bilder").select("id").eq("ort",place)
    const ids = images.map(i=>i.id)
 
-   await supabaseClient
-    .from("bewertungen")
-    .update({panorama:false})
-    .in("bild_id",ids)
-    .eq("nutzer_id",userId)
+   await supabaseClient.from("bewertungen").update({panorama:false}).in("bild_id",ids).eq("nutzer_id",userId)
  }
 
- const {data} = await supabaseClient
-  .from("bewertungen")
-  .select("*")
-  .eq("bild_id", bild_id)
-  .eq("nutzer_id", userId)
-  .maybeSingle()
+ const {data} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", bild_id).eq("nutzer_id", userId).maybeSingle()
 
  if(data){
-   await supabaseClient.from("bewertungen")
-   .update({panorama:!current})
-   .eq("id",data.id)
+   await supabaseClient.from("bewertungen").update({panorama:!current}).eq("id",data.id)
  } else {
-   await supabaseClient.from("bewertungen")
-   .insert({bild_id:bild_id,nutzer_id:userId,panorama:true})
+   await supabaseClient.from("bewertungen").insert({bild_id:bild_id,nutzer_id:userId,panorama:true})
  }
 }
 
@@ -178,10 +166,7 @@ async function loadImages(place){
 
  for (const img of images){
 
-   const {data:imgRatings} = await supabaseClient
-     .from("bewertungen")
-     .select("*")
-     .eq("bild_id", img.id)
+   const {data:imgRatings} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", img.id)
 
    const myEntry = imgRatings.find(r => r.nutzer_id === userId)
 
@@ -191,6 +176,11 @@ async function loadImages(place){
 
    const card=document.createElement("div")
    card.className="card"
+
+   const del=document.createElement("span")
+   del.className="deleteBtn"
+   del.textContent="✖"
+   del.onclick=()=>deleteImage(img.id, place)
 
    const image=document.createElement("img")
    image.src=img.url
@@ -234,6 +224,7 @@ async function loadImages(place){
    actions.appendChild(panoIcon)
    actions.append(" Panorama")
 
+   card.appendChild(del)
    card.appendChild(image)
    card.appendChild(ratingDiv)
    card.appendChild(actions)
