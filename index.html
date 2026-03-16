@@ -13,7 +13,7 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px}
 
 .card {background:#fafafa;padding:8px;border-radius:8px;border:1px solid #ddd}
-.card img {width:100%;height:130px;object-fit:cover;border-radius:6px}
+.card img {width:100%;height:130px;object-fit:cover;border-radius:6px;cursor:pointer}
 
 .rating span {cursor:pointer;font-size:20px;color:#bbb}
 .rating span.active {color:#e0a800}
@@ -24,9 +24,10 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .icon.favorite {color:#e0a800}
 .icon.panorama {color:#2a7cff}
 
-.debug {margin-top:6px;font-size:11px;background:#eee;padding:4px;border-radius:4px}
-
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
+#preview {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;z-index:9999}
+#preview img {max-width:90%;max-height:90%}
+.closePreview {position:absolute;top:20px;right:30px;color:white;font-size:30px;cursor:pointer}
 </style>
 </head>
 
@@ -38,6 +39,11 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 <strong>Nutzer auswählen:</strong><br><br>
 <select id="userDropdown"></select>
 <button id="confirmUser">Bestätigen</button>
+</div>
+
+<div id="preview">
+<span class="closePreview" onclick="closePreview()">×</span>
+<img id="previewImg">
 </div>
 
 <script>
@@ -88,6 +94,15 @@ async function setUser(){
  init()
 }
 
+function openPreview(url){
+ document.getElementById("previewImg").src=url
+ document.getElementById("preview").style.display="flex"
+}
+
+function closePreview(){
+ document.getElementById("preview").style.display="none"
+}
+
 async function saveRating(bild_id, rating){
 
  const {data} = await supabaseClient
@@ -126,7 +141,6 @@ async function toggleFavorite(bild_id,current){
 async function togglePanorama(place,bild_id,current){
 
  if(!current){
-
    const {data:images} = await supabaseClient.from("bilder").select("id").eq("ort",place)
    const ids = images.map(i=>i.id)
 
@@ -180,6 +194,7 @@ async function loadImages(place){
 
    const image=document.createElement("img")
    image.src=img.url
+   image.onclick=()=>openPreview(img.url)
 
    const ratingDiv=document.createElement("div")
    ratingDiv.className="rating"
@@ -219,17 +234,11 @@ async function loadImages(place){
    actions.appendChild(panoIcon)
    actions.append(" Panorama")
 
-   const debug=document.createElement("div")
-   debug.className="debug"
-   debug.textContent="rating: "+myRating+" | favorite: "+isFavorite+" | panorama: "+isPanorama
-
    card.appendChild(image)
    card.appendChild(ratingDiv)
    card.appendChild(actions)
-   card.appendChild(debug)
 
    container.appendChild(card)
-
  }
 }
 
@@ -263,7 +272,6 @@ document.addEventListener("DOMContentLoaded",()=>{
  }
 
 })
-
 </script>
 
 <details>
