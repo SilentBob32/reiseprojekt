@@ -15,14 +15,14 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .card {background:#fafafa;padding:8px;border-radius:8px;border:1px solid #ddd}
 .card img {width:100%;height:130px;object-fit:cover;border-radius:6px}
 
-.rating span {cursor:pointer;font-size:18px;color:#bbb}
+.rating span {cursor:pointer;font-size:20px;color:#bbb}
 .rating span.active {color:#e0a800}
 
 .actions {margin-top:6px;font-size:14px;color:#333}
 
-.icon {font-weight:bold;color:#888;margin-right:6px;cursor:pointer}
-.icon.active-fav {color:#d4a300}
-.icon.active-panorama {color:#2a7cff}
+.icon {font-size:20px;color:#bbb;margin-right:6px;cursor:pointer}
+.icon.favorite {color:#e0a800}
+.icon.panorama {color:#2a7cff}
 
 .debug {margin-top:6px;font-size:11px;background:#eee;padding:4px;border-radius:4px}
 
@@ -42,9 +42,17 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 
 <script>
 
-const supabaseClient = supabase.createClient("https://gvbipujajoxdrolatbrw.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng")
-const places = ["salzburg", "hamburg", "bratislava", "karlsbad", "bad_flinsberg", "kirschau", "bad_staffelstein", "weimar", "erfurt", "dresden", "breslau", "prag", "nuernberg", "wien"]
-const users = ["Jens", "Simone", "Stephan", "Steffen", "Nobody1", "Nobody2", "Nobody3"]
+const projectUrl = "https://gvbipujajoxdrolatbrw.supabase.co"
+const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng"
+
+const supabaseClient = supabase.createClient(projectUrl, anonKey)
+
+const places = [
+"salzburg","hamburg","bratislava","karlsbad","bad_flinsberg","kirschau",
+"bad_staffelstein","weimar","erfurt","dresden","breslau","prag","nuernberg","wien"
+]
+
+const users = ["Jens","Simone","Stephan","Steffen","Nobody1","Nobody2","Nobody3"]
 
 let userId = localStorage.getItem("reise_user")
 let userName = localStorage.getItem("reise_user_name")
@@ -81,6 +89,7 @@ async function setUser(){
 }
 
 async function saveRating(bild_id, rating){
+
  const {data} = await supabaseClient
   .from("bewertungen")
   .select("*")
@@ -96,6 +105,7 @@ async function saveRating(bild_id, rating){
 }
 
 async function toggleFavorite(bild_id,current){
+
  const {data} = await supabaseClient
   .from("bewertungen")
   .select("*")
@@ -114,8 +124,9 @@ async function toggleFavorite(bild_id,current){
 }
 
 async function togglePanorama(place,bild_id,current){
+
  if(!current){
-   // reset panorama for this user/place
+
    const {data:images} = await supabaseClient.from("bilder").select("id").eq("ort",place)
    const ids = images.map(i=>i.id)
 
@@ -188,16 +199,16 @@ async function loadImages(place){
    actions.className="actions"
 
    const favIcon=document.createElement("span")
-   favIcon.className="icon "+(isFavorite ? "active-fav":"")
-   favIcon.textContent="☆"
+   favIcon.className="icon "+(isFavorite ? "favorite":"")
+   favIcon.textContent="★"
    favIcon.onclick=async()=>{
       await toggleFavorite(img.id,isFavorite)
       loadImages(place)
    }
 
    const panoIcon=document.createElement("span")
-   panoIcon.className="icon "+(isPanorama ? "active-panorama":"")
-   panoIcon.textContent="▭"
+   panoIcon.className="icon "+(isPanorama ? "panorama":"")
+   panoIcon.textContent="★"
    panoIcon.onclick=async()=>{
       await togglePanorama(place,img.id,isPanorama)
       loadImages(place)
@@ -220,7 +231,6 @@ async function loadImages(place){
    container.appendChild(card)
 
  }
-
 }
 
 async function addImage(place){
