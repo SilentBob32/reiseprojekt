@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -11,29 +10,21 @@ body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px}
-
+.exampleGrid {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.exampleGrid img {width:100%;height:110px;object-fit:cover;border-radius:6px}
 .card {background:#fafafa;padding:8px;border-radius:8px;border:1px solid #ddd;position:relative}
 .card img {width:100%;height:130px;object-fit:cover;border-radius:6px;cursor:pointer}
-
 .deleteBtn {position:absolute;top:6px;right:8px;color:#b22222;font-weight:bold;cursor:pointer;font-size:18px}
-
 .rating span {cursor:pointer;font-size:20px;color:#bbb}
 .rating span.active {color:#e0a800}
-
 .actions {margin-top:6px;font-size:14px;color:#333}
-
 .icon {font-size:20px;color:#bbb;margin-right:6px;cursor:pointer}
 .icon.favorite {color:#e0a800}
 .icon.panorama {color:#2a7cff}
-
+.links {margin-top:6px;font-size:13px}
 #userSelect {background:white;padding:20px;border-radius:10px;margin-bottom:30px}
-
-#preview {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;z-index:9999}
-#preview img {max-width:90%;max-height:90%}
-.closePreview {position:absolute;top:20px;right:30px;color:white;font-size:30px;cursor:pointer}
 </style>
 </head>
-
 <body>
 
 <h1>Reiseprojekt Bildpool</h1>
@@ -44,22 +35,12 @@ details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
 <button id="confirmUser">Bestätigen</button>
 </div>
 
-<div id="preview">
-<span class="closePreview" onclick="closePreview()">×</span>
-<img id="previewImg">
-</div>
-
 <script>
 
 const projectUrl = "https://gvbipujajoxdrolatbrw.supabase.co"
 const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng"
 
 const supabaseClient = supabase.createClient(projectUrl, anonKey)
-
-const places = [
-"salzburg","hamburg","bratislava","karlsbad","bad_flinsberg","kirschau",
-"bad_staffelstein","weimar","erfurt","dresden","breslau","prag","nuernberg","wien"
-]
 
 const users = ["Jens","Simone","Stephan","Steffen","Nobody1","Nobody2","Nobody3"]
 
@@ -97,29 +78,15 @@ async function setUser(){
  init()
 }
 
-function openPreview(url){
- document.getElementById("previewImg").src=url
- document.getElementById("preview").style.display="flex"
-}
-
-function closePreview(){
- document.getElementById("preview").style.display="none"
-}
-
 async function deleteImage(bildId, place){
-
- if(!confirm("Bild wirklich löschen?\nAlle Bewertungen werden ebenfalls entfernt.")) return
-
+ if(!confirm("Bild wirklich löschen?")) return
  await supabaseClient.from("bewertungen").delete().eq("bild_id", bildId)
  await supabaseClient.from("bilder").delete().eq("id", bildId)
-
  loadImages(place)
 }
 
 async function saveRating(bild_id, rating){
-
  const {data} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", bild_id).eq("nutzer_id", userId).maybeSingle()
-
  if(data){
    await supabaseClient.from("bewertungen").update({rating:rating}).eq("id",data.id)
  } else {
@@ -128,9 +95,7 @@ async function saveRating(bild_id, rating){
 }
 
 async function toggleFavorite(bild_id,current){
-
  const {data} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", bild_id).eq("nutzer_id", userId).maybeSingle()
-
  if(data){
    await supabaseClient.from("bewertungen").update({favorite:!current}).eq("id",data.id)
  } else {
@@ -139,16 +104,12 @@ async function toggleFavorite(bild_id,current){
 }
 
 async function togglePanorama(place,bild_id,current){
-
  if(!current){
    const {data:images} = await supabaseClient.from("bilder").select("id").eq("ort",place)
    const ids = images.map(i=>i.id)
-
    await supabaseClient.from("bewertungen").update({panorama:false}).in("bild_id",ids).eq("nutzer_id",userId)
  }
-
  const {data} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", bild_id).eq("nutzer_id", userId).maybeSingle()
-
  if(data){
    await supabaseClient.from("bewertungen").update({panorama:!current}).eq("id",data.id)
  } else {
@@ -157,19 +118,14 @@ async function togglePanorama(place,bild_id,current){
 }
 
 async function loadImages(place){
-
  const {data:images} = await supabaseClient.from("bilder").select("*").eq("ort",place)
  const container=document.getElementById(place+"_list")
  container.innerHTML=""
-
  if(!images) return
 
  for (const img of images){
-
    const {data:imgRatings} = await supabaseClient.from("bewertungen").select("*").eq("bild_id", img.id)
-
    const myEntry = imgRatings.find(r => r.nutzer_id === userId)
-
    const isFavorite = myEntry?.favorite === true
    const isPanorama = myEntry?.panorama === true
    const myRating = myEntry?.rating || 0
@@ -184,7 +140,6 @@ async function loadImages(place){
 
    const image=document.createElement("img")
    image.src=img.url
-   image.onclick=()=>openPreview(img.url)
 
    const ratingDiv=document.createElement("div")
    ratingDiv.className="rating"
@@ -237,7 +192,6 @@ async function addImage(place){
  const input=document.getElementById(place+"_input")
  const url=input.value.trim()
  if(!url) return
-
  await supabaseClient.from("bilder").insert({ort:place,url:url})
  input.value=""
  loadImages(place)
@@ -249,24 +203,47 @@ function registerButtons(){
  })
 }
 
-function init(){ places.forEach(p=>loadImages(p)) }
+function init(){
+loadImages("salzburg");
+loadImages("hamburg");
+loadImages("bratislava");
+loadImages("karlsbad");
+loadImages("bad_flinsberg");
+loadImages("kirschau");
+loadImages("bad_staffelstein");
+loadImages("weimar");
+loadImages("erfurt");
+loadImages("dresden");
+loadImages("breslau");
+loadImages("prag");
+loadImages("nuernberg");
+loadImages("wien");
+}
 
 document.addEventListener("DOMContentLoaded",()=>{
-
  populateUsers()
  registerButtons()
  document.getElementById("confirmUser").onclick=setUser
-
  if(userId && userName){
    document.getElementById("userSelect").style.display="none"
    init()
  }
-
 })
 </script>
 
 <details>
 <summary>Salzburg</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Salzburg">
+<img src="https://source.unsplash.com/featured/401x300/?Salzburg">
+<img src="https://source.unsplash.com/featured/402x300/?Salzburg">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Salzburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Salzburg/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="salzburg_input" placeholder="Bildlink einfügen">
@@ -280,6 +257,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Hamburg</summary>
 
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Hamburg">
+<img src="https://source.unsplash.com/featured/401x300/?Hamburg">
+<img src="https://source.unsplash.com/featured/402x300/?Hamburg">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Hamburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Hamburg/" target="_blank">Pexels Bilder suchen</a>
+</div>
+
 <div>
 <input id="hamburg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="hamburg">Hinzufügen</button>
@@ -292,6 +280,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Bratislava</summary>
 
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Bratislava">
+<img src="https://source.unsplash.com/featured/401x300/?Bratislava">
+<img src="https://source.unsplash.com/featured/402x300/?Bratislava">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Bratislava&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Bratislava/" target="_blank">Pexels Bilder suchen</a>
+</div>
+
 <div>
 <input id="bratislava_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="bratislava">Hinzufügen</button>
@@ -302,7 +301,18 @@ document.addEventListener("DOMContentLoaded",()=>{
 </details>
 
 <details>
-<summary>Karlsbad</summary>
+<summary>Karlovy Vary</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Karlovy+Vary">
+<img src="https://source.unsplash.com/featured/401x300/?Karlovy+Vary">
+<img src="https://source.unsplash.com/featured/402x300/?Karlovy+Vary">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Karlovy+Vary&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Karlovy+Vary/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="karlsbad_input" placeholder="Bildlink einfügen">
@@ -316,6 +326,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Bad Flinsberg</summary>
 
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Bad+Flinsberg">
+<img src="https://source.unsplash.com/featured/401x300/?Bad+Flinsberg">
+<img src="https://source.unsplash.com/featured/402x300/?Bad+Flinsberg">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Bad+Flinsberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Bad+Flinsberg/" target="_blank">Pexels Bilder suchen</a>
+</div>
+
 <div>
 <input id="bad_flinsberg_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="bad_flinsberg">Hinzufügen</button>
@@ -327,6 +348,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Kirschau</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Kirschau">
+<img src="https://source.unsplash.com/featured/401x300/?Kirschau">
+<img src="https://source.unsplash.com/featured/402x300/?Kirschau">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Kirschau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Kirschau/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="kirschau_input" placeholder="Bildlink einfügen">
@@ -340,6 +372,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Bad Staffelstein</summary>
 
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Bad+Staffelstein">
+<img src="https://source.unsplash.com/featured/401x300/?Bad+Staffelstein">
+<img src="https://source.unsplash.com/featured/402x300/?Bad+Staffelstein">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Bad+Staffelstein&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Bad+Staffelstein/" target="_blank">Pexels Bilder suchen</a>
+</div>
+
 <div>
 <input id="bad_staffelstein_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="bad_staffelstein">Hinzufügen</button>
@@ -351,6 +394,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 <details>
 <summary>Weimar</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Weimar">
+<img src="https://source.unsplash.com/featured/401x300/?Weimar">
+<img src="https://source.unsplash.com/featured/402x300/?Weimar">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Weimar&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Weimar/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="weimar_input" placeholder="Bildlink einfügen">
@@ -364,6 +418,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Erfurt</summary>
 
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Erfurt">
+<img src="https://source.unsplash.com/featured/401x300/?Erfurt">
+<img src="https://source.unsplash.com/featured/402x300/?Erfurt">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Erfurt&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Erfurt/" target="_blank">Pexels Bilder suchen</a>
+</div>
+
 <div>
 <input id="erfurt_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="erfurt">Hinzufügen</button>
@@ -376,6 +441,17 @@ document.addEventListener("DOMContentLoaded",()=>{
 <details>
 <summary>Dresden</summary>
 
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Dresden">
+<img src="https://source.unsplash.com/featured/401x300/?Dresden">
+<img src="https://source.unsplash.com/featured/402x300/?Dresden">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Dresden&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Dresden/" target="_blank">Pexels Bilder suchen</a>
+</div>
+
 <div>
 <input id="dresden_input" placeholder="Bildlink einfügen">
 <button class="addbtn" data-place="dresden">Hinzufügen</button>
@@ -386,7 +462,18 @@ document.addEventListener("DOMContentLoaded",()=>{
 </details>
 
 <details>
-<summary>Breslau</summary>
+<summary>Wroclaw</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Wroclaw">
+<img src="https://source.unsplash.com/featured/401x300/?Wroclaw">
+<img src="https://source.unsplash.com/featured/402x300/?Wroclaw">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Wroclaw&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Wroclaw/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="breslau_input" placeholder="Bildlink einfügen">
@@ -398,7 +485,18 @@ document.addEventListener("DOMContentLoaded",()=>{
 </details>
 
 <details>
-<summary>Prag</summary>
+<summary>Prague</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Prague">
+<img src="https://source.unsplash.com/featured/401x300/?Prague">
+<img src="https://source.unsplash.com/featured/402x300/?Prague">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Prague&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Prague/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="prag_input" placeholder="Bildlink einfügen">
@@ -410,7 +508,18 @@ document.addEventListener("DOMContentLoaded",()=>{
 </details>
 
 <details>
-<summary>Nuernberg</summary>
+<summary>Nuremberg</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Nuremberg">
+<img src="https://source.unsplash.com/featured/401x300/?Nuremberg">
+<img src="https://source.unsplash.com/featured/402x300/?Nuremberg">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Nuremberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Nuremberg/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="nuernberg_input" placeholder="Bildlink einfügen">
@@ -422,7 +531,18 @@ document.addEventListener("DOMContentLoaded",()=>{
 </details>
 
 <details>
-<summary>Wien</summary>
+<summary>Vienna</summary>
+
+<div class="exampleGrid">
+<img src="https://source.unsplash.com/featured/400x300/?Vienna">
+<img src="https://source.unsplash.com/featured/401x300/?Vienna">
+<img src="https://source.unsplash.com/featured/402x300/?Vienna">
+</div>
+
+<div class="links">
+🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Vienna&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
+🔎 <a href="https://www.pexels.com/search/Vienna/" target="_blank">Pexels Bilder suchen</a>
+</div>
 
 <div>
 <input id="wien_input" placeholder="Bildlink einfügen">
