@@ -4,17 +4,22 @@
 <head>
 <meta charset="UTF-8">
 <title>Bildersuche Sven 50</title>
+
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
 .headerUser {margin-bottom:20px}
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
-.exampleGrid {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.exampleGrid img {width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer}
-.links {margin-bottom:10px;font-size:14px}
+.placeholderGrid {display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.placeholder {background:#eee;height:110px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#777;font-size:13px}
+.preview {margin-top:10px}
+.preview img {max-width:220px;border-radius:6px}
+.gallery {display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px}
+.gallery img {width:100%;border-radius:6px}
 input {padding:6px;width:60%}
 button {padding:6px 10px;margin-left:6px;cursor:pointer}
 </style>
+
 </head>
 <body>
 
@@ -33,283 +38,447 @@ Aktiver Nutzer: <b id="activeUser"></b>
 
 <script>
 
-const users = ['Jens', 'Simone', 'Stephan', 'Steffen', 'Nobody1', 'Nobody2', 'Nobody3'];
+const users = ['Jens', 'Simone', 'Stephan', 'Steffen', 'Nobody1', 'Nobody2', 'Nobody3']
 
 function initUsers() {
- const dd=document.getElementById("userDropdown");
+ const dd=document.getElementById("userDropdown")
  users.forEach(u=>{
-   const o=document.createElement("option");
-   o.value=u;
-   o.textContent=u;
-   dd.appendChild(o);
- });
+   const o=document.createElement("option")
+   o.value=u
+   o.textContent=u
+   dd.appendChild(o)
+ })
 }
 
 function setUser() {
- const u=document.getElementById("userDropdown").value;
- document.getElementById("activeUser").textContent=u;
- document.getElementById("userSelect").style.display="none";
- document.getElementById("userInfo").style.display="block";
+ const u=document.getElementById("userDropdown").value
+ document.getElementById("activeUser").textContent=u
+ document.getElementById("userSelect").style.display="none"
+ document.getElementById("userInfo").style.display="block"
 }
 
 function switchUser() {
- document.getElementById("userSelect").style.display="block";
- document.getElementById("userInfo").style.display="none";
+ document.getElementById("userSelect").style.display="block"
+ document.getElementById("userInfo").style.display="none"
 }
 
-window.onload=initUsers;
+function previewImage(place) {
+ const url = document.getElementById(place+"_input").value
+ const preview = document.getElementById(place+"_preview")
+ preview.innerHTML = ""
+ if(!url) return
+ const img = document.createElement("img")
+ img.src = url
+ img.onerror = function() {
+   preview.innerHTML = "⚠ Bild konnte nicht geladen werden"
+ }
+ preview.appendChild(img)
+}
+
+function addImage(place) {
+ const url = document.getElementById(place+"_input").value
+ if(!url) return
+ const gallery = document.getElementById(place+"_gallery")
+ const img = document.createElement("img")
+ img.src = url
+ gallery.appendChild(img)
+ document.getElementById(place+"_input").value=""
+ document.getElementById(place+"_preview").innerHTML=""
+}
+
+window.onload=initUsers
 
 </script>
 
 <details>
 <summary>Salzburg</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Salzburg_city_view.jpg/640px-Salzburg_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Salzburg_city_view.jpg/640px-Salzburg_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Salzburg_panorama.jpg/640px-Salzburg_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Salzburg_panorama.jpg/640px-Salzburg_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Salzburg_skyline.jpg/640px-Salzburg_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Salzburg_skyline.jpg/640px-Salzburg_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Salzburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Salzburg" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Salzburg/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="salzburg_input" placeholder="Bildlink einfügen" oninput="previewImage('salzburg')">
+<button onclick="addImage('salzburg')">Hinzufügen</button>
+
+<div id="salzburg_preview" class="preview"></div>
+
+<div id="salzburg_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Hamburg</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Hamburg_city_view.jpg/640px-Hamburg_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Hamburg_city_view.jpg/640px-Hamburg_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Hamburg_panorama.jpg/640px-Hamburg_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Hamburg_panorama.jpg/640px-Hamburg_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Hamburg_skyline.jpg/640px-Hamburg_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Hamburg_skyline.jpg/640px-Hamburg_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Hamburg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Hamburg" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Hamburg/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="hamburg_input" placeholder="Bildlink einfügen" oninput="previewImage('hamburg')">
+<button onclick="addImage('hamburg')">Hinzufügen</button>
+
+<div id="hamburg_preview" class="preview"></div>
+
+<div id="hamburg_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Bratislava</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bratislava_city_view.jpg/640px-Bratislava_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bratislava_city_view.jpg/640px-Bratislava_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Bratislava_panorama.jpg/640px-Bratislava_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Bratislava_panorama.jpg/640px-Bratislava_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bratislava_skyline.jpg/640px-Bratislava_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bratislava_skyline.jpg/640px-Bratislava_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Bratislava&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Bratislava" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Bratislava/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="bratislava_input" placeholder="Bildlink einfügen" oninput="previewImage('bratislava')">
+<button onclick="addImage('bratislava')">Hinzufügen</button>
+
+<div id="bratislava_preview" class="preview"></div>
+
+<div id="bratislava_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Karlsbad</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Karlsbad_city_view.jpg/640px-Karlsbad_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Karlsbad_city_view.jpg/640px-Karlsbad_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Karlsbad_panorama.jpg/640px-Karlsbad_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Karlsbad_panorama.jpg/640px-Karlsbad_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Karlsbad_skyline.jpg/640px-Karlsbad_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Karlsbad_skyline.jpg/640px-Karlsbad_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Karlsbad&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Karlsbad" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Karlsbad/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="karlsbad_input" placeholder="Bildlink einfügen" oninput="previewImage('karlsbad')">
+<button onclick="addImage('karlsbad')">Hinzufügen</button>
+
+<div id="karlsbad_preview" class="preview"></div>
+
+<div id="karlsbad_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Bad Flinsberg</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bad_Flinsberg_city_view.jpg/640px-Bad_Flinsberg_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bad_Flinsberg_city_view.jpg/640px-Bad_Flinsberg_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Bad_Flinsberg_panorama.jpg/640px-Bad_Flinsberg_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Bad_Flinsberg_panorama.jpg/640px-Bad_Flinsberg_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bad_Flinsberg_skyline.jpg/640px-Bad_Flinsberg_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bad_Flinsberg_skyline.jpg/640px-Bad_Flinsberg_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Bad+Flinsberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Bad+Flinsberg" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Bad+Flinsberg/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="bad_flinsberg_input" placeholder="Bildlink einfügen" oninput="previewImage('bad_flinsberg')">
+<button onclick="addImage('bad_flinsberg')">Hinzufügen</button>
+
+<div id="bad_flinsberg_preview" class="preview"></div>
+
+<div id="bad_flinsberg_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Kirschau</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Kirschau_city_view.jpg/640px-Kirschau_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Kirschau_city_view.jpg/640px-Kirschau_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Kirschau_panorama.jpg/640px-Kirschau_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Kirschau_panorama.jpg/640px-Kirschau_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Kirschau_skyline.jpg/640px-Kirschau_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Kirschau_skyline.jpg/640px-Kirschau_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Kirschau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Kirschau" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Kirschau/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="kirschau_input" placeholder="Bildlink einfügen" oninput="previewImage('kirschau')">
+<button onclick="addImage('kirschau')">Hinzufügen</button>
+
+<div id="kirschau_preview" class="preview"></div>
+
+<div id="kirschau_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Bad Staffelstein</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bad_Staffelstein_city_view.jpg/640px-Bad_Staffelstein_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Bad_Staffelstein_city_view.jpg/640px-Bad_Staffelstein_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Bad_Staffelstein_panorama.jpg/640px-Bad_Staffelstein_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Bad_Staffelstein_panorama.jpg/640px-Bad_Staffelstein_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bad_Staffelstein_skyline.jpg/640px-Bad_Staffelstein_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bad_Staffelstein_skyline.jpg/640px-Bad_Staffelstein_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Bad+Staffelstein&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Bad+Staffelstein" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Bad+Staffelstein/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="bad_staffelstein_input" placeholder="Bildlink einfügen" oninput="previewImage('bad_staffelstein')">
+<button onclick="addImage('bad_staffelstein')">Hinzufügen</button>
+
+<div id="bad_staffelstein_preview" class="preview"></div>
+
+<div id="bad_staffelstein_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Weimar</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Weimar_city_view.jpg/640px-Weimar_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Weimar_city_view.jpg/640px-Weimar_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Weimar_panorama.jpg/640px-Weimar_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Weimar_panorama.jpg/640px-Weimar_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Weimar_skyline.jpg/640px-Weimar_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Weimar_skyline.jpg/640px-Weimar_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Weimar&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Weimar" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Weimar/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="weimar_input" placeholder="Bildlink einfügen" oninput="previewImage('weimar')">
+<button onclick="addImage('weimar')">Hinzufügen</button>
+
+<div id="weimar_preview" class="preview"></div>
+
+<div id="weimar_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Erfurt</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Erfurt_city_view.jpg/640px-Erfurt_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Erfurt_city_view.jpg/640px-Erfurt_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Erfurt_panorama.jpg/640px-Erfurt_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Erfurt_panorama.jpg/640px-Erfurt_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Erfurt_skyline.jpg/640px-Erfurt_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Erfurt_skyline.jpg/640px-Erfurt_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Erfurt&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Erfurt" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Erfurt/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="erfurt_input" placeholder="Bildlink einfügen" oninput="previewImage('erfurt')">
+<button onclick="addImage('erfurt')">Hinzufügen</button>
+
+<div id="erfurt_preview" class="preview"></div>
+
+<div id="erfurt_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Dresden</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Dresden_city_view.jpg/640px-Dresden_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Dresden_city_view.jpg/640px-Dresden_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Dresden_panorama.jpg/640px-Dresden_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Dresden_panorama.jpg/640px-Dresden_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Dresden_skyline.jpg/640px-Dresden_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Dresden_skyline.jpg/640px-Dresden_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Dresden&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Dresden" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Dresden/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="dresden_input" placeholder="Bildlink einfügen" oninput="previewImage('dresden')">
+<button onclick="addImage('dresden')">Hinzufügen</button>
+
+<div id="dresden_preview" class="preview"></div>
+
+<div id="dresden_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Breslau</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Breslau_city_view.jpg/640px-Breslau_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Breslau_city_view.jpg/640px-Breslau_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Breslau_panorama.jpg/640px-Breslau_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Breslau_panorama.jpg/640px-Breslau_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Breslau_skyline.jpg/640px-Breslau_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Breslau_skyline.jpg/640px-Breslau_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Breslau&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Breslau" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Breslau/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="breslau_input" placeholder="Bildlink einfügen" oninput="previewImage('breslau')">
+<button onclick="addImage('breslau')">Hinzufügen</button>
+
+<div id="breslau_preview" class="preview"></div>
+
+<div id="breslau_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Prag</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Prag_city_view.jpg/640px-Prag_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Prag_city_view.jpg/640px-Prag_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Prag_panorama.jpg/640px-Prag_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Prag_panorama.jpg/640px-Prag_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Prag_skyline.jpg/640px-Prag_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Prag_skyline.jpg/640px-Prag_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Prag&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Prag" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Prag/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="prag_input" placeholder="Bildlink einfügen" oninput="previewImage('prag')">
+<button onclick="addImage('prag')">Hinzufügen</button>
+
+<div id="prag_preview" class="preview"></div>
+
+<div id="prag_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Nürnberg</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Nürnberg_city_view.jpg/640px-Nürnberg_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Nürnberg_city_view.jpg/640px-Nürnberg_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Nürnberg_panorama.jpg/640px-Nürnberg_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Nürnberg_panorama.jpg/640px-Nürnberg_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Nürnberg_skyline.jpg/640px-Nürnberg_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Nürnberg_skyline.jpg/640px-Nürnberg_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Nürnberg&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Nürnberg" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Nürnberg/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="nürnberg_input" placeholder="Bildlink einfügen" oninput="previewImage('nürnberg')">
+<button onclick="addImage('nürnberg')">Hinzufügen</button>
+
+<div id="nürnberg_preview" class="preview"></div>
+
+<div id="nürnberg_gallery" class="gallery"></div>
 
 </details>
 
 <details>
 <summary>Wien</summary>
 
-<div class="exampleGrid">
-<a href="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Wien_city_view.jpg/640px-Wien_city_view.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Wien_city_view.jpg/640px-Wien_city_view.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Wien_panorama.jpg/640px-Wien_panorama.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Wien_panorama.jpg/640px-Wien_panorama.jpg"></a><a href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Wien_skyline.jpg/640px-Wien_skyline.jpg" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Wien_skyline.jpg/640px-Wien_skyline.jpg"></a>
+<b>🌄 Panorama Gewinner (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
 </div>
 
-<div class="links">
-🔎 <a href="https://commons.wikimedia.org/w/index.php?search=Wien&title=Special:MediaSearch&type=image" target="_blank">Wikimedia Bilder suchen</a><br>
-🔎 <a href="https://unsplash.com/s/photos/Wien" target="_blank">Unsplash Bilder suchen</a><br>
-🔎 <a href="https://www.pexels.com/search/Wien/" target="_blank">Pexels Bilder suchen</a>
+<b>⭐ Top Highlights (Version 6)</b>
+
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
 </div>
 
-<input placeholder="Bildlink einfügen">
-<button>Hinzufügen</button>
+<br>
+
+<input id="wien_input" placeholder="Bildlink einfügen" oninput="previewImage('wien')">
+<button onclick="addImage('wien')">Hinzufügen</button>
+
+<div id="wien_preview" class="preview"></div>
+
+<div id="wien_gallery" class="gallery"></div>
 
 </details>
 </body></html>
