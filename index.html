@@ -10,19 +10,17 @@
 body {font-family:Arial;background:#f5f2eb;margin:40px}
 h1 {color:#b22222}
 details {background:white;padding:15px;border-radius:10px;margin-bottom:20px}
-.grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:10px}
+.grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:10px}
 
 .card {background:#fafafa;padding:8px;border-radius:8px;border:1px solid #ddd}
 .card img {width:100%;height:130px;object-fit:cover;border-radius:6px}
 
+.rating span {cursor:pointer;font-size:18px;color:#bbb}
+.rating span.active {color:#e0a800}
+
 .actions {margin-top:6px;font-size:14px;color:#333}
 
-.icon {
-font-weight:bold;
-color:#888;
-margin-right:6px;
-}
-
+.icon {font-weight:bold;color:#888;margin-right:6px;cursor:pointer}
 .icon.active-fav {color:#d4a300}
 .icon.active-panorama {color:#2a7cff}
 
@@ -82,6 +80,69 @@ async function setUser(){
  init()
 }
 
+async function saveRating(bild_id, rating){
+ const {data} = await supabaseClient
+  .from("bewertungen")
+  .select("*")
+  .eq("bild_id", bild_id)
+  .eq("nutzer_id", userId)
+  .maybeSingle()
+
+ if(data){
+   await supabaseClient.from("bewertungen").update({rating:rating}).eq("id",data.id)
+ } else {
+   await supabaseClient.from("bewertungen").insert({bild_id:bild_id,nutzer_id:userId,rating:rating})
+ }
+}
+
+async function toggleFavorite(bild_id,current){
+ const {data} = await supabaseClient
+  .from("bewertungen")
+  .select("*")
+  .eq("bild_id", bild_id)
+  .eq("nutzer_id", userId)
+  .maybeSingle()
+
+ if(data){
+   await supabaseClient.from("bewertungen")
+   .update({favorite:!current})
+   .eq("id",data.id)
+ } else {
+   await supabaseClient.from("bewertungen")
+   .insert({bild_id:bild_id,nutzer_id:userId,favorite:true})
+ }
+}
+
+async function togglePanorama(place,bild_id,current){
+ if(!current){
+   // reset panorama for this user/place
+   const {data:images} = await supabaseClient.from("bilder").select("id").eq("ort",place)
+   const ids = images.map(i=>i.id)
+
+   await supabaseClient
+    .from("bewertungen")
+    .update({panorama:false})
+    .in("bild_id",ids)
+    .eq("nutzer_id",userId)
+ }
+
+ const {data} = await supabaseClient
+  .from("bewertungen")
+  .select("*")
+  .eq("bild_id", bild_id)
+  .eq("nutzer_id", userId)
+  .maybeSingle()
+
+ if(data){
+   await supabaseClient.from("bewertungen")
+   .update({panorama:!current})
+   .eq("id",data.id)
+ } else {
+   await supabaseClient.from("bewertungen")
+   .insert({bild_id:bild_id,nutzer_id:userId,panorama:true})
+ }
+}
+
 async function loadImages(place){
 
  const {data:images} = await supabaseClient.from("bilder").select("*").eq("ort",place)
@@ -110,7 +171,18 @@ async function loadImages(place){
    image.src=img.url
 
    const ratingDiv=document.createElement("div")
-   ratingDiv.textContent="Bewertung: "+myRating
+   ratingDiv.className="rating"
+
+   for(let i=1;i<=5;i++){
+     const star=document.createElement("span")
+     star.textContent="★"
+     if(i<=myRating) star.classList.add("active")
+     star.onclick=async()=>{
+        await saveRating(img.id,i)
+        loadImages(place)
+     }
+     ratingDiv.appendChild(star)
+   }
 
    const actions=document.createElement("div")
    actions.className="actions"
@@ -118,10 +190,18 @@ async function loadImages(place){
    const favIcon=document.createElement("span")
    favIcon.className="icon "+(isFavorite ? "active-fav":"")
    favIcon.textContent="☆"
+   favIcon.onclick=async()=>{
+      await toggleFavorite(img.id,isFavorite)
+      loadImages(place)
+   }
 
    const panoIcon=document.createElement("span")
    panoIcon.className="icon "+(isPanorama ? "active-panorama":"")
    panoIcon.textContent="▭"
+   panoIcon.onclick=async()=>{
+      await togglePanorama(place,img.id,isPanorama)
+      loadImages(place)
+   }
 
    actions.appendChild(favIcon)
    actions.append(" Favorit  ")
