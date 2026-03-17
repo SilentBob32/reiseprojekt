@@ -1,52 +1,45 @@
-<!DOCTYPE html>
 
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <title>Bildersuche Sven 50</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-body {font-family:Arial;background:#f5f2eb;margin:30px}
-h1 {color:#b22222}
+body {font-family:Arial;background:#f5f2eb;margin:40px}
+h1 {color:#b22222;margin-bottom:20px}
 
-.card {
-  background:#fff;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  position:relative;
-  margin-bottom:12px;
-}
+.headerUser {margin-bottom:25px}
 
-.card img {
-  width:100%;
-  border-radius:6px;
-  cursor:pointer;
-}
+details {background:white;padding:18px;border-radius:10px;margin-bottom:20px}
 
-.deleteBtn {
-  position:absolute;
-  top:6px;
-  right:8px;
-  background:rgba(0,0,0,0.6);
-  color:#fff;
-  border:none;
-  border-radius:50%;
-  width:26px;
-  height:26px;
-  cursor:pointer;
-}
+.placeholderGrid {display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:15px}
+.placeholder {background:#eee;height:110px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#777;font-size:13px}
 
-.star {font-size:22px;color:#bbb;cursor:pointer}
+.searchLinks {margin-bottom:15px;font-size:14px}
+
+input {padding:6px;width:60%}
+button {padding:6px 12px;margin-left:6px;cursor:pointer}
+
+.preview {margin-top:12px;margin-bottom:15px}
+.preview img {max-width:260px;border-radius:6px}
+
+.gallery {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:10px}
+
+.card {background:#fafafa;padding:10px;border-radius:8px;border:1px solid #ddd}
+
+.card img {width:100%;border-radius:6px;cursor:pointer}
+
+.rating {font-size:20px;margin-top:6px;color:#bbb;cursor:pointer}
 .star.active {color:#f4c542}
+
+.meta {font-size:13px;margin-top:4px;color:#666}
+
+.actions {margin-top:6px;font-size:14px}
+.actions span {cursor:pointer;margin-right:10px}
 
 .favorite.active {color:#f4c542}
 .panorama.active {color:#3b82f6}
-
-.preview {margin-top:10px;margin-bottom:15px}
-.preview img {max-width:260px;border-radius:6px}
 </style>
 
 </head>
@@ -55,188 +48,598 @@ h1 {color:#b22222}
 
 <h1>Bildersuche Sven 50</h1>
 
-<select id="user">
-<option>Jens</option>
-<option>Simone</option>
-<option>Stephan</option>
-<option>Steffen</option>
-<option>Nobody1</option>
-<option>Nobody2</option>
-<option>Nobody3</option>
-</select>
-<button onclick="setUser()">Start</button>
-
-<div id="info"></div>
-
-<hr>
-
-<div>
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Salzburg" target="_blank">Wikimedia</a> |
-🔎 <a href="https://www.pexels.com/search/salzburg/" target="_blank">Pexels</a> |
-🔎 <a href="https://unsplash.com/s/photos/salzburg" target="_blank">Unsplash</a>
+<div id="userSelect">
+<b>Nutzer auswählen:</b><br><br>
+<select id="userDropdown"></select>
+<button onclick="setUser()">Bestätigen</button>
 </div>
 
-<br>
-
-<input id="input" placeholder="Bildlink einfügen" oninput="previewImage()">
-<button onclick="addImage()">Hinzufügen</button>
-
-<div id="preview" class="preview"></div>
-
-<div id="gallery"></div>
+<div id="userInfo" class="headerUser" style="display:none">
+Aktiver Nutzer: <b id="activeUser"></b>
+<button onclick="switchUser()">Nutzer wechseln</button>
+</div>
 
 <script>
 
-const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
-const SUPABASE_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
+const users = ['Jens', 'Simone', 'Stephan', 'Steffen', 'Nobody1', 'Nobody2', 'Nobody3'];
+const places = ['Salzburg', 'Hamburg', 'Bratislava', 'Karlsbad', 'Bad Flinsberg', 'Kirschau', 'Bad Staffelstein', 'Weimar', 'Erfurt', 'Dresden', 'Breslau', 'Prag', 'Nürnberg', 'Wien'];
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let currentUser = null;
+function initUsers(){
+ const dd=document.getElementById("userDropdown");
+ users.forEach(u=>{
+  const o=document.createElement("option");
+  o.value=u;
+  o.textContent=u;
+  dd.appendChild(o);
+ });
+}
 
 function setUser(){
-  currentUser = document.getElementById("user").value;
-  document.getElementById("info").innerText = "Aktiver Nutzer: " + currentUser;
-  loadImages();
+ const u=document.getElementById("userDropdown").value;
+ document.getElementById("activeUser").textContent=u;
+ document.getElementById("userSelect").style.display="none";
+ document.getElementById("userInfo").style.display="block";
+ loadAll();
 }
 
-function previewImage(){
-  const url = document.getElementById("input").value;
-  const box = document.getElementById("preview");
-  box.innerHTML = "";
-
-  if(!url) return;
-
-  const img = document.createElement("img");
-  img.src = url;
-
-  img.onerror = () => {
-    box.innerHTML = "⚠ Bild konnte nicht geladen werden";
-  };
-
-  box.appendChild(img);
+function switchUser(){
+ document.getElementById("userSelect").style.display="block";
+ document.getElementById("userInfo").style.display="none";
 }
 
-async function loadImages(){
-  const { data: images } = await supabase.from("bilder").select("*");
+function key(place){return "bilder_"+place;}
 
-  const gallery = document.getElementById("gallery");
-  gallery.innerHTML = "";
-
-  for(const img of images){
-
-    const { data: ratings } = await supabase
-      .from("bewertungen")
-      .select("*")
-      .eq("bild_id", img.id);
-
-    const userRating = ratings.find(r => r.nutzer_id === currentUser);
-
-    let avg = 0;
-    if(ratings.length > 0){
-      avg = ratings.reduce((a,b)=>a+b.rating,0)/ratings.length;
-    }
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const del = document.createElement("button");
-    del.innerHTML = "✖";
-    del.className = "deleteBtn";
-    del.onclick = () => deleteImage(img.id);
-
-    const a = document.createElement("a");
-    a.href = img.url;
-    a.target = "_blank";
-
-    const image = document.createElement("img");
-    image.src = img.url;
-
-    a.appendChild(image);
-
-    const stars = document.createElement("div");
-
-    for(let i=1;i<=5;i++){
-      const s = document.createElement("span");
-      s.innerHTML = "★";
-      s.className = "star" + (userRating && userRating.rating >= i ? " active" : "");
-      s.onclick = () => setRating(img.id, i);
-      stars.appendChild(s);
-    }
-
-    const info = document.createElement("div");
-    info.innerHTML = "Ø " + avg.toFixed(1) + " (" + ratings.length + ")";
-
-    const fav = document.createElement("span");
-    fav.innerHTML = " ⭐";
-    fav.className = "favorite" + (userRating?.favorite ? " active" : "");
-    fav.onclick = () => toggle(img.id, "favorite");
-
-    const pano = document.createElement("span");
-    pano.innerHTML = " 🌄";
-    pano.className = "panorama" + (userRating?.panorama ? " active" : "");
-    pano.onclick = () => toggle(img.id, "panorama");
-
-    card.appendChild(del);
-    card.appendChild(a);
-    card.appendChild(stars);
-    card.appendChild(info);
-    card.appendChild(fav);
-    card.appendChild(pano);
-
-    gallery.appendChild(card);
-  }
+function getData(place){
+ return JSON.parse(localStorage.getItem(key(place))||"[]");
 }
 
-async function addImage(){
-  const url = document.getElementById("input").value;
-  if(!url) return;
-
-  await supabase.from("bilder").insert({url:url, ort:"Salzburg"});
-
-  document.getElementById("input").value = "";
-  document.getElementById("preview").innerHTML = "";
-
-  loadImages();
+function saveData(place,data){
+ localStorage.setItem(key(place),JSON.stringify(data));
 }
 
-async function setRating(id,val){
-  await supabase.from("bewertungen").upsert({
-    bild_id:id,
-    nutzer_id:currentUser,
-    rating:val
-  },{onConflict:["bild_id","nutzer_id"]});
+function previewImage(place){
+ const url=document.getElementById(place+"_input").value;
+ const box=document.getElementById(place+"_preview");
+ box.innerHTML="";
+ if(!url) return;
 
-  loadImages();
+ const img=document.createElement("img");
+ img.src=url;
+ img.onerror=()=>{box.innerHTML="⚠ Bild konnte nicht geladen werden";};
+ box.appendChild(img);
 }
 
-async function toggle(id,type){
-  const { data } = await supabase
-    .from("bewertungen")
-    .select("*")
-    .eq("bild_id",id)
-    .eq("nutzer_id",currentUser)
-    .single();
+function addImage(place){
+ const url=document.getElementById(place+"_input").value;
+ if(!url) return;
 
-  let value = !data?.[type];
+ let data=getData(place);
+ data.push({url:url,rating:0,favorite:false,panorama:false});
+ saveData(place,data);
 
-  await supabase.from("bewertungen").upsert({
-    bild_id:id,
-    nutzer_id:currentUser,
-    [type]:value
-  },{onConflict:["bild_id","nutzer_id"]});
+ document.getElementById(place+"_input").value="";
+ document.getElementById(place+"_preview").innerHTML="";
 
-  loadImages();
+ render(place);
 }
 
-async function deleteImage(id){
-  await supabase.from("bewertungen").delete().eq("bild_id",id);
-  await supabase.from("bilder").delete().eq("id",id);
-  loadImages();
+function setRating(place,i,val){
+ let data=getData(place);
+ data[i].rating=val;
+ saveData(place,data);
+ render(place);
 }
+
+function toggle(place,i,type){
+ let data=getData(place);
+
+ if(type==="panorama"){
+   data.forEach(x=>x.panorama=false);
+ }
+
+ data[i][type]=!data[i][type];
+ saveData(place,data);
+ render(place);
+}
+
+function removeImg(place,i){
+ let data=getData(place);
+ data.splice(i,1);
+ saveData(place,data);
+ render(place);
+}
+
+function render(place){
+ const g=document.getElementById(place+"_gallery");
+ g.innerHTML="";
+
+ const data=getData(place);
+
+ data.forEach((img,i)=>{
+
+   const card=document.createElement("div");
+   card.className="card";
+
+   const a=document.createElement("a");
+   a.href=img.url;
+   a.target="_blank";
+
+   const image=document.createElement("img");
+   image.src=img.url;
+
+   a.appendChild(image);
+
+   const rating=document.createElement("div");
+   rating.className="rating";
+
+   for(let s=1;s<=5;s++){
+     const star=document.createElement("span");
+     star.innerHTML="★";
+     star.className="star"+(s<=img.rating?" active":"");
+     star.onclick=()=>setRating(place,i,s);
+     rating.appendChild(star);
+   }
+
+   const meta=document.createElement("div");
+   meta.className="meta";
+   meta.innerHTML="Ø "+img.rating+" Bewertung";
+
+   const actions=document.createElement("div");
+   actions.className="actions";
+
+   const fav=document.createElement("span");
+   fav.innerHTML="★ Favorit";
+   fav.className="favorite"+(img.favorite?" active":"");
+   fav.onclick=()=>toggle(place,i,"favorite");
+
+   const pano=document.createElement("span");
+   pano.innerHTML="🌄 Panorama";
+   pano.className="panorama"+(img.panorama?" active":"");
+   pano.onclick=()=>toggle(place,i,"panorama");
+
+   const del=document.createElement("span");
+   del.innerHTML="✖ Löschen";
+   del.onclick=()=>removeImg(place,i);
+
+   actions.appendChild(fav);
+   actions.appendChild(pano);
+   actions.appendChild(del);
+
+   card.appendChild(a);
+   card.appendChild(rating);
+   card.appendChild(meta);
+   card.appendChild(actions);
+
+   g.appendChild(card);
+
+ });
+}
+
+function loadAll(){
+ places.forEach(p=>render(p.replace(/ /g,"_")));
+}
+
+window.onload=initUsers;
 
 </script>
 
-</body>
-</html>
+
+<details>
+<summary>Salzburg</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Salzburg" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Salzburg/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Salzburg_input" placeholder="Bildlink einfügen" oninput="previewImage('Salzburg')">
+<button onclick="addImage('Salzburg')">Hinzufügen</button>
+
+<div id="Salzburg_preview" class="preview"></div>
+
+<div id="Salzburg_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Hamburg</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Hamburg" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Hamburg/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Hamburg_input" placeholder="Bildlink einfügen" oninput="previewImage('Hamburg')">
+<button onclick="addImage('Hamburg')">Hinzufügen</button>
+
+<div id="Hamburg_preview" class="preview"></div>
+
+<div id="Hamburg_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Bratislava</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Bratislava" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Bratislava/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Bratislava_input" placeholder="Bildlink einfügen" oninput="previewImage('Bratislava')">
+<button onclick="addImage('Bratislava')">Hinzufügen</button>
+
+<div id="Bratislava_preview" class="preview"></div>
+
+<div id="Bratislava_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Karlsbad</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Karlsbad" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Karlsbad/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Karlsbad_input" placeholder="Bildlink einfügen" oninput="previewImage('Karlsbad')">
+<button onclick="addImage('Karlsbad')">Hinzufügen</button>
+
+<div id="Karlsbad_preview" class="preview"></div>
+
+<div id="Karlsbad_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Bad Flinsberg</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Bad+Flinsberg" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Bad+Flinsberg/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Bad_Flinsberg_input" placeholder="Bildlink einfügen" oninput="previewImage('Bad_Flinsberg')">
+<button onclick="addImage('Bad_Flinsberg')">Hinzufügen</button>
+
+<div id="Bad_Flinsberg_preview" class="preview"></div>
+
+<div id="Bad_Flinsberg_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Kirschau</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Kirschau" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Kirschau/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Kirschau_input" placeholder="Bildlink einfügen" oninput="previewImage('Kirschau')">
+<button onclick="addImage('Kirschau')">Hinzufügen</button>
+
+<div id="Kirschau_preview" class="preview"></div>
+
+<div id="Kirschau_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Bad Staffelstein</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Bad+Staffelstein" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Bad+Staffelstein/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Bad_Staffelstein_input" placeholder="Bildlink einfügen" oninput="previewImage('Bad_Staffelstein')">
+<button onclick="addImage('Bad_Staffelstein')">Hinzufügen</button>
+
+<div id="Bad_Staffelstein_preview" class="preview"></div>
+
+<div id="Bad_Staffelstein_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Weimar</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Weimar" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Weimar/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Weimar_input" placeholder="Bildlink einfügen" oninput="previewImage('Weimar')">
+<button onclick="addImage('Weimar')">Hinzufügen</button>
+
+<div id="Weimar_preview" class="preview"></div>
+
+<div id="Weimar_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Erfurt</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Erfurt" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Erfurt/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Erfurt_input" placeholder="Bildlink einfügen" oninput="previewImage('Erfurt')">
+<button onclick="addImage('Erfurt')">Hinzufügen</button>
+
+<div id="Erfurt_preview" class="preview"></div>
+
+<div id="Erfurt_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Dresden</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Dresden" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Dresden/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Dresden_input" placeholder="Bildlink einfügen" oninput="previewImage('Dresden')">
+<button onclick="addImage('Dresden')">Hinzufügen</button>
+
+<div id="Dresden_preview" class="preview"></div>
+
+<div id="Dresden_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Breslau</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Breslau" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Breslau/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Breslau_input" placeholder="Bildlink einfügen" oninput="previewImage('Breslau')">
+<button onclick="addImage('Breslau')">Hinzufügen</button>
+
+<div id="Breslau_preview" class="preview"></div>
+
+<div id="Breslau_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Prag</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Prag" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Prag/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Prag_input" placeholder="Bildlink einfügen" oninput="previewImage('Prag')">
+<button onclick="addImage('Prag')">Hinzufügen</button>
+
+<div id="Prag_preview" class="preview"></div>
+
+<div id="Prag_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Nürnberg</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Nürnberg" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Nürnberg/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Nürnberg_input" placeholder="Bildlink einfügen" oninput="previewImage('Nürnberg')">
+<button onclick="addImage('Nürnberg')">Hinzufügen</button>
+
+<div id="Nürnberg_preview" class="preview"></div>
+
+<div id="Nürnberg_gallery" class="gallery"></div>
+
+</details>
+
+
+<details>
+<summary>Wien</summary>
+
+<b>🌄 Panorama Gewinner (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights (Version 6)</b>
+<div class="placeholderGrid">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<div class="searchLinks">
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Wien" target="_blank">Wikimedia Bilder</a> |
+🔎 <a href="https://www.pexels.com/search/Wien/" target="_blank">Pexels Bilder</a>
+</div>
+
+<input id="Wien_input" placeholder="Bildlink einfügen" oninput="previewImage('Wien')">
+<button onclick="addImage('Wien')">Hinzufügen</button>
+
+<div id="Wien_preview" class="preview"></div>
+
+<div id="Wien_gallery" class="gallery"></div>
+
+</details>
+</body></html>
