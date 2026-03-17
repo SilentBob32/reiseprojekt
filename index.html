@@ -22,7 +22,6 @@ h1 {color:#b22222}
 .card img {
   width:100%;
   border-radius:6px;
-  cursor:pointer;
 }
 
 .deleteBtn {
@@ -41,7 +40,10 @@ h1 {color:#b22222}
 .star {font-size:22px;color:#bbb;cursor:pointer}
 .star.active {color:#f4c542}
 
+.favorite {cursor:pointer}
 .favorite.active {color:#f4c542}
+
+.panorama {cursor:pointer}
 .panorama.active {color:#3b82f6}
 </style>
 
@@ -66,14 +68,6 @@ h1 {color:#b22222}
 
 <hr>
 
-<div>
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Salzburg" target="_blank">Wikimedia</a> |
-🔎 <a href="https://www.pexels.com/search/salzburg/" target="_blank">Pexels</a> |
-🔎 <a href="https://unsplash.com/s/photos/salzburg" target="_blank">Unsplash</a>
-</div>
-
-<br>
-
 <input id="input" placeholder="Bildlink einfügen">
 <button onclick="addImage()">Hinzufügen</button>
 
@@ -82,7 +76,7 @@ h1 {color:#b22222}
 <script>
 
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
+const SUPABASE_KEY = "DEIN_KEY";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -95,6 +89,7 @@ function setUser(){
 }
 
 async function loadImages(){
+
   const { data: images } = await supabase.from("bilder").select("*");
 
   const gallery = document.getElementById("gallery");
@@ -122,14 +117,8 @@ async function loadImages(){
     del.className = "deleteBtn";
     del.onclick = () => deleteImage(img.id);
 
-    const a = document.createElement("a");
-    a.href = img.url;
-    a.target = "_blank";
-
     const image = document.createElement("img");
     image.src = img.url;
-
-    a.appendChild(image);
 
     const stars = document.createElement("div");
 
@@ -145,17 +134,17 @@ async function loadImages(){
     info.innerHTML = "Ø " + avg.toFixed(1) + " (" + ratings.length + ")";
 
     const fav = document.createElement("span");
-    fav.innerHTML = " ⭐";
+    fav.innerHTML = " ⭐ Favorit ";
     fav.className = "favorite" + (userRating?.favorite ? " active" : "");
     fav.onclick = () => toggle(img.id, "favorite");
 
     const pano = document.createElement("span");
-    pano.innerHTML = " 🌄";
+    pano.innerHTML = " 🌄 Panorama ";
     pano.className = "panorama" + (userRating?.panorama ? " active" : "");
     pano.onclick = () => toggle(img.id, "panorama");
 
     card.appendChild(del);
-    card.appendChild(a);
+    card.appendChild(image);
     card.appendChild(stars);
     card.appendChild(info);
     card.appendChild(fav);
@@ -176,16 +165,18 @@ async function addImage(){
 }
 
 async function setRating(id,val){
+
   await supabase.from("bewertungen").upsert({
     bild_id:id,
     nutzer_id:currentUser,
     rating:val
-  },{onConflict:["bild_id","nutzer_id"]});
+  }, { onConflict: ["bild_id","nutzer_id"] });
 
   loadImages();
 }
 
 async function toggle(id,type){
+
   const { data } = await supabase
     .from("bewertungen")
     .select("*")
@@ -199,7 +190,7 @@ async function toggle(id,type){
     bild_id:id,
     nutzer_id:currentUser,
     [type]:value
-  },{onConflict:["bild_id","nutzer_id"]});
+  }, { onConflict: ["bild_id","nutzer_id"] });
 
   loadImages();
 }
