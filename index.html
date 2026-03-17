@@ -3,10 +3,214 @@
 <head>
 <meta charset="UTF-8">
 <title>Bildersuche Sven 50</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body {font-family:Arial;background:#f5f2eb;margin:30px}
+h1 {color:#b22222}
+
+.card {
+  background:#fff;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  position:relative;
+  margin-bottom:12px;
+}
+
+.card img {
+  width:100%;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.deleteBtn {
+  position:absolute;
+  top:6px;
+  right:8px;
+  background:rgba(0,0,0,0.6);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  cursor:pointer;
+}
+
+.star {font-size:22px;color:#bbb;cursor:pointer}
+.star.active {color:#f4c542}
+
+.favorite.active {color:#f4c542}
+.panorama.active {color:#3b82f6}
+</style>
+
 </head>
+
 <body>
-<h1>Version 5.26 – Supabase Integration</h1>
-<p>Bitte API Key im Code ergänzen.</p>
+
+<h1>Bildersuche Sven 50</h1>
+
+<select id="user">
+<option>Jens</option>
+<option>Simone</option>
+<option>Stephan</option>
+<option>Steffen</option>
+<option>Nobody1</option>
+<option>Nobody2</option>
+<option>Nobody3</option>
+</select>
+<button onclick="setUser()">Start</button>
+
+<div id="info"></div>
+
+<hr>
+
+<div>
+🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Salzburg" target="_blank">Wikimedia</a> |
+🔎 <a href="https://www.pexels.com/search/salzburg/" target="_blank">Pexels</a> |
+🔎 <a href="https://unsplash.com/s/photos/salzburg" target="_blank">Unsplash</a>
+</div>
+
+<br>
+
+<input id="input" placeholder="Bildlink einfügen">
+<button onclick="addImage()">Hinzufügen</button>
+
+<div id="gallery"></div>
+
+<script>
+
+const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+
+function setUser(){
+  currentUser = document.getElementById("user").value;
+  document.getElementById("info").innerText = "Aktiver Nutzer: " + currentUser;
+  loadImages();
+}
+
+async function loadImages(){
+  const { data: images } = await supabase.from("bilder").select("*");
+
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = "";
+
+  for(const img of images){
+
+    const { data: ratings } = await supabase
+      .from("bewertungen")
+      .select("*")
+      .eq("bild_id", img.id);
+
+    const userRating = ratings.find(r => r.nutzer_id === currentUser);
+
+    let avg = 0;
+    if(ratings.length > 0){
+      avg = ratings.reduce((a,b)=>a+b.rating,0)/ratings.length;
+    }
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const del = document.createElement("button");
+    del.innerHTML = "✖";
+    del.className = "deleteBtn";
+    del.onclick = () => deleteImage(img.id);
+
+    const a = document.createElement("a");
+    a.href = img.url;
+    a.target = "_blank";
+
+    const image = document.createElement("img");
+    image.src = img.url;
+
+    a.appendChild(image);
+
+    const stars = document.createElement("div");
+
+    for(let i=1;i<=5;i++){
+      const s = document.createElement("span");
+      s.innerHTML = "★";
+      s.className = "star" + (userRating && userRating.rating >= i ? " active" : "");
+      s.onclick = () => setRating(img.id, i);
+      stars.appendChild(s);
+    }
+
+    const info = document.createElement("div");
+    info.innerHTML = "Ø " + avg.toFixed(1) + " (" + ratings.length + ")";
+
+    const fav = document.createElement("span");
+    fav.innerHTML = " ⭐";
+    fav.className = "favorite" + (userRating?.favorite ? " active" : "");
+    fav.onclick = () => toggle(img.id, "favorite");
+
+    const pano = document.createElement("span");
+    pano.innerHTML = " 🌄";
+    pano.className = "panorama" + (userRating?.panorama ? " active" : "");
+    pano.onclick = () => toggle(img.id, "panorama");
+
+    card.appendChild(del);
+    card.appendChild(a);
+    card.appendChild(stars);
+    card.appendChild(info);
+    card.appendChild(fav);
+    card.appendChild(pano);
+
+    gallery.appendChild(card);
+  }
+}
+
+async function addImage(){
+  const url = document.getElementById("input").value;
+  if(!url) return;
+
+  await supabase.from("bilder").insert({url:url, ort:"Salzburg"});
+
+  document.getElementById("input").value = "";
+  loadImages();
+}
+
+async function setRating(id,val){
+  await supabase.from("bewertungen").upsert({
+    bild_id:id,
+    nutzer_id:currentUser,
+    rating:val
+  },{onConflict:["bild_id","nutzer_id"]});
+
+  loadImages();
+}
+
+async function toggle(id,type){
+  const { data } = await supabase
+    .from("bewertungen")
+    .select("*")
+    .eq("bild_id",id)
+    .eq("nutzer_id",currentUser)
+    .single();
+
+  let value = !data?.[type];
+
+  await supabase.from("bewertungen").upsert({
+    bild_id:id,
+    nutzer_id:currentUser,
+    [type]:value
+  },{onConflict:["bild_id","nutzer_id"]});
+
+  loadImages();
+}
+
+async function deleteImage(id){
+  await supabase.from("bewertungen").delete().eq("bild_id",id);
+  await supabase.from("bilder").delete().eq("id",id);
+  loadImages();
+}
+
+</script>
+
 </body>
 </html>
