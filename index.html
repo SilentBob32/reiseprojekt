@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -76,9 +77,10 @@ h1 {color:#b22222}
 <script>
 
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
-const SUPABASE_KEY = "DEIN_KEY";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// 🔥 WICHTIGER FIX
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser = null;
 
@@ -90,14 +92,19 @@ function setUser(){
 
 async function loadImages(){
 
-  const { data: images } = await supabase.from("bilder").select("*");
+  const { data: images, error } = await sb.from("bilder").select("*");
+
+  if(error){
+    console.error("Fehler Bilder:", error);
+    return;
+  }
 
   const gallery = document.getElementById("gallery");
   gallery.innerHTML = "";
 
   for(const img of images){
 
-    const { data: ratings } = await supabase
+    const { data: ratings } = await sb
       .from("bewertungen")
       .select("*")
       .eq("bild_id", img.id);
@@ -158,7 +165,7 @@ async function addImage(){
   const url = document.getElementById("input").value;
   if(!url) return;
 
-  await supabase.from("bilder").insert({url:url, ort:"Salzburg"});
+  await sb.from("bilder").insert({url:url, ort:"Salzburg"});
 
   document.getElementById("input").value = "";
   loadImages();
@@ -166,7 +173,7 @@ async function addImage(){
 
 async function setRating(id,val){
 
-  await supabase.from("bewertungen").upsert({
+  await sb.from("bewertungen").upsert({
     bild_id:id,
     nutzer_id:currentUser,
     rating:val
@@ -177,7 +184,7 @@ async function setRating(id,val){
 
 async function toggle(id,type){
 
-  const { data } = await supabase
+  const { data } = await sb
     .from("bewertungen")
     .select("*")
     .eq("bild_id",id)
@@ -186,7 +193,7 @@ async function toggle(id,type){
 
   let value = !data?.[type];
 
-  await supabase.from("bewertungen").upsert({
+  await sb.from("bewertungen").upsert({
     bild_id:id,
     nutzer_id:currentUser,
     [type]:value
@@ -196,8 +203,8 @@ async function toggle(id,type){
 }
 
 async function deleteImage(id){
-  await supabase.from("bewertungen").delete().eq("bild_id",id);
-  await supabase.from("bilder").delete().eq("id",id);
+  await sb.from("bewertungen").delete().eq("bild_id",id);
+  await sb.from("bilder").delete().eq("id",id);
   loadImages();
 }
 
