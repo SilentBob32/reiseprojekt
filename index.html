@@ -4,7 +4,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Bildersuche Sven 50</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
@@ -43,6 +42,7 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
 .panorama.active {color:#3b82f6}
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -82,7 +82,6 @@ function initUsers(){
 }
 
 async function setUser(){
-
  const u=document.getElementById("userDropdown").value;
  document.getElementById("activeUser").textContent=u;
  document.getElementById("userSelect").style.display="none";
@@ -97,40 +96,8 @@ function switchUser(){
 
 function key(place){return "bilder_"+place;}
 
-async function getData(place){
- const { data: images } = await sb
-   .from("bilder")
-   .select("*")
-   .eq("ort", place);
-
- const result = [];
-
- for(const img of images){
-
-   const { data: ratings } = await sb
-     .from("bewertungen")
-     .select("*")
-     .eq("bild_id", img.id);
-
-   const userRating = ratings.find(r => r.nutzer_id === currentUser);
-
-   let avg = 0;
-   if(ratings.length > 0){
-     avg = ratings.reduce((a,b)=>a+b.rating,0)/ratings.length;
-   }
-
-   result.push({
-     id: img.id,
-     url: img.url,
-     rating: userRating?.rating || 0,
-     favorite: userRating?.favorite || false,
-     panorama: userRating?.panorama || false,
-     avg: avg,
-     count: ratings.length
-   });
- }
-
- return result;
+function getData(place){
+ return JSON.parse(localStorage.getItem(key(place))||"[]");
 }
 
 function saveData(place,data){
@@ -163,13 +130,9 @@ function addImage(place){
  render(place);
 }
 
-async function setRating(place,i,val){
+function setRating(place,i,val){
  let data=getData(place);
- await sb.from("bewertungen").upsert({
-  bild_id: data[i].id,
-  nutzer_id: currentUser,
-  rating: val
-}, { onConflict: ["bild_id","nutzer_id"] });
+ data[i].rating=val;
  saveData(place,data);
  render(place);
 }
@@ -178,10 +141,7 @@ function toggle(place,i,type){
  let data=getData(place);
 
  if(type==="panorama"){
-   await sb.from("bewertungen")
-  .update({ panorama: false })
-  .eq("nutzer_id", currentUser);
-
+   data.forEach(x=>x.panorama=false);
  }
 
  data[i][type]=!data[i][type];
@@ -196,11 +156,11 @@ function removeImg(place,i){
  render(place);
 }
 
-async function render(place){
+function render(place){
  const g=document.getElementById(place+"_gallery");
  g.innerHTML="";
 
- const data = await getData(place);
+ const data=getData(place);
 
  data.forEach((img,i)=>{
 
