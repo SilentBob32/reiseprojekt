@@ -132,11 +132,7 @@ function addImage(place){
 
 function setRating(place,i,val){
  let data=getData(place);
- await sb.from("bewertungen").upsert({
-  bild_id: data[i].id,
-  nutzer_id: currentUser,
-  rating: val
-}, { onConflict: ["bild_id","nutzer_id"] });
+ data[i].rating=val;
  saveData(place,data);
  render(place);
 }
