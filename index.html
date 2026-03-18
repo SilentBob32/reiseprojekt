@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Bildersuche Sven 50</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body {font-family:Arial;background:#f5f2eb;margin:40px}
@@ -42,7 +43,6 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
 .panorama.active {color:#3b82f6}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -65,8 +65,6 @@ const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null;
-
 
 const users = ['Jens', 'Simone', 'Stephan', 'Steffen', 'Nobody1', 'Nobody2', 'Nobody3'];
 const places = ['Salzburg', 'Hamburg', 'Bratislava', 'Karlsbad', 'Bad Flinsberg', 'Kirschau', 'Bad Staffelstein', 'Weimar', 'Erfurt', 'Dresden', 'Breslau', 'Prag', 'Nürnberg', 'Wien'];
@@ -81,7 +79,7 @@ function initUsers(){
  });
 }
 
-async function setUser(){
+function setUser(){
  const u=document.getElementById("userDropdown").value;
  document.getElementById("activeUser").textContent=u;
  document.getElementById("userSelect").style.display="none";
@@ -96,8 +94,24 @@ function switchUser(){
 
 function key(place){return "bilder_"+place;}
 
-function getData(place){
- return JSON.parse(localStorage.getItem(key(place))||"[]");
+async function getData(place){
+ const { data, error } = await sb
+   .from("bilder")
+   .select("*")
+   .eq("ort", place);
+
+ if(error){
+   console.error(error);
+   return [];
+ }
+
+ return data.map(x => ({
+   url: x.url,
+   rating: 0,
+   favorite: false,
+   panorama: false,
+   id: x.id
+ }));
 }
 
 function saveData(place,data){
@@ -116,13 +130,14 @@ function previewImage(place){
  box.appendChild(img);
 }
 
-function addImage(place){
+async function addImage(place){
  const url=document.getElementById(place+"_input").value;
  if(!url) return;
 
- let data=getData(place);
- data.push({url:url,rating:0,favorite:false,panorama:false});
- saveData(place,data);
+ await sb.from("bilder").insert({
+   url: url,
+   ort: place
+ });
 
  document.getElementById(place+"_input").value="";
  document.getElementById(place+"_preview").innerHTML="";
@@ -132,11 +147,7 @@ function addImage(place){
 
 function setRating(place,i,val){
  let data=getData(place);
- await sb.from("bewertungen").upsert({
-  bild_id: data[i].id,
-  nutzer_id: currentUser,
-  rating: val
-}, { onConflict: ["bild_id","nutzer_id"] });
+ data[i].rating=val;
  saveData(place,data);
  render(place);
 }
@@ -153,18 +164,23 @@ function toggle(place,i,type){
  render(place);
 }
 
-function removeImg(place,i){
- let data=getData(place);
- data.splice(i,1);
- saveData(place,data);
+async function removeImg(place,i){
+
+ const data = await getData(place);
+ const id = data[i].id;
+
+ if(!id) return;
+
+ await sb.from("bilder").delete().eq("id", id);
+
  render(place);
 }
 
-function render(place){
+async function render(place){
  const g=document.getElementById(place+"_gallery");
  g.innerHTML="";
 
- const data=getData(place);
+ const data = await getData(place);
 
  data.forEach((img,i)=>{
 
@@ -226,8 +242,10 @@ function render(place){
  });
 }
 
-function loadAll(){
- places.forEach(p=>render(p.replace(/ /g,"_")));
+async function loadAll(){
+ for(const p of places){
+   await render(p.replace(/ /g,"_"));
+ }
 }
 
 window.onload=initUsers;
