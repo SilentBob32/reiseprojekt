@@ -396,8 +396,12 @@ highlights.forEach(h => {
    }
 
    const meta=document.createElement("div");
-   meta.className="meta";
-   meta.innerHTML="Ø "+img.avg.toFixed(1)+" ("+img.count+")";
+meta.className="meta";
+
+meta.innerHTML = `
+Ø ${img.avg.toFixed(1)} (${img.count})
+<span style="margin-left:10px">🌄 ${img.panoCount || 0}</span>
+`;
 
    const actions=document.createElement("div");
    actions.className="actions";
