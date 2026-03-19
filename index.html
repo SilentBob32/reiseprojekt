@@ -186,6 +186,10 @@ async function getData(place){
  return result;
 }
 
+function getPanoramaWinner(data){
+  return data.find(img => img.panorama === true);
+}
+
 function saveData(place,data){
  localStorage.setItem(key(place),JSON.stringify(data));
 }
@@ -282,6 +286,27 @@ if(linksBox){
 }
 
  const data = await getData(place);
+ 
+ // 👉 Panorama Gewinner holen
+const pano = getPanoramaWinner(data);
+
+// 👉 Ziel-Container
+const panoBox = document.getElementById(place + "_pano");
+
+if(panoBox){
+  panoBox.innerHTML = "";
+
+  if(pano){
+    const img = document.createElement("img");
+    img.src = pano.url;
+    img.style.width = "100%";
+    img.style.borderRadius = "6px";
+
+    panoBox.appendChild(img);
+  } else {
+    panoBox.innerHTML = "<div class='placeholder'>Kein Panorama gewählt</div>";
+  }
+}
 
  data.forEach((img,i)=>{
 
@@ -359,7 +384,7 @@ window.onload=initUsers;
 <summary>Salzburg</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Salzburg_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -386,7 +411,7 @@ window.onload=initUsers;
 <summary>Hamburg</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Hamburg_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -413,7 +438,7 @@ window.onload=initUsers;
 <summary>Bratislava</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Bratislava_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -440,7 +465,7 @@ window.onload=initUsers;
 <summary>Karlsbad</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Karlsbad_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -467,7 +492,7 @@ window.onload=initUsers;
 <summary>Bad Flinsberg</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Bad_Flinsbergpano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -494,7 +519,7 @@ window.onload=initUsers;
 <summary>Kirschau</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Kirschau_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -521,7 +546,7 @@ window.onload=initUsers;
 <summary>Bad Staffelstein</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Bad_Staffelstein_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -548,7 +573,7 @@ window.onload=initUsers;
 <summary>Weimar</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Weimar_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -575,7 +600,7 @@ window.onload=initUsers;
 <summary>Erfurt</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Erfurt_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -602,7 +627,7 @@ window.onload=initUsers;
 <summary>Dresden</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Dresden_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -629,7 +654,7 @@ window.onload=initUsers;
 <summary>Breslau</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Breslau_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -656,7 +681,7 @@ window.onload=initUsers;
 <summary>Prag</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Prag_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -683,7 +708,7 @@ window.onload=initUsers;
 <summary>Nürnberg</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Nürnberg_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
@@ -710,7 +735,7 @@ window.onload=initUsers;
 <summary>Wien</summary>
 
 <b>🌄 Panorama Gewinner (Version 6)</b>
-<div class="placeholderGrid">
+<div class="placeholderGrid" id="Wien_pano">
 <div class="placeholder">Panorama Platzhalter</div>
 </div>
 
