@@ -273,7 +273,7 @@ async function render(place){
 
    const meta=document.createElement("div");
    meta.className="meta";
-   meta.innerHTML="Ø "+img.rating+" Bewertung";
+   meta.innerHTML="Ø "+img.avg.toFixed(1)+" ("+img.count+")";
 
    const actions=document.createElement("div");
    actions.className="actions";
