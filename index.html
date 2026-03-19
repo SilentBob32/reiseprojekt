@@ -167,6 +167,8 @@ async function getData(place){
      .from("bewertungen")
      .select("*")
      .eq("bild_id", img.id);
+     
+   const panoCount = ratings.filter(r => r.panorama === true).length;
 
    const userRating = ratings.find(r => r.nutzer_id === currentUser);
 
@@ -182,7 +184,8 @@ async function getData(place){
      favorite: userRating?.favorite || false,
      panorama: userRating?.panorama || false,
      avg: avg,
-     count: ratings.length
+     count: ratings.length,
+     panoramaCount: panoCount // 👈 NEU
    });
  }
 
@@ -191,6 +194,24 @@ async function getData(place){
 
 function getPanoramaWinner(data){
   return data.find(img => img.panorama === true);
+}
+
+function getGlobalPanoramaWinner(data){
+
+  let winner = null;
+  let maxVotes = 0;
+
+  data.forEach(img => {
+
+    const panoVotes = img.panoramaCount || 0;
+
+    if(panoVotes > maxVotes){
+      maxVotes = panoVotes;
+      winner = img;
+    }
+  });
+
+  return winner;
 }
 
 function getTopHighlights(data){
@@ -299,7 +320,7 @@ if(linksBox){
  const data = await getData(place);
  
  // 👉 Panorama Gewinner holen
-const pano = getPanoramaWinner(data);
+const pano = getGlobalPanoramaWinner(data);
 
 // 👉 Ziel-Container
 const panoBox = document.getElementById(place + "_pano");
