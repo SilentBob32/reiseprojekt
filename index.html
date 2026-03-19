@@ -163,22 +163,46 @@ async function addImage(place){
  render(place);
 }
 
-function setRating(place,i,val){
- let data=getData(place);
- data[i].rating=val;
- saveData(place,data);
+async function setRating(place,i,val){
+
+ const data = await getData(place);
+ const img = data[i];
+
+ await sb.from("bewertungen").upsert({
+   bild_id: img.id,
+   nutzer_id: currentUser,
+   rating: val
+ }, { onConflict: ["bild_id","nutzer_id"] });
+
  render(place);
 }
 
-function toggle(place,i,type){
- let data=getData(place);
+async function toggle(place,i,type){
 
- if(type==="panorama"){
-   data.forEach(x=>x.panorama=false);
+ const data = await getData(place);
+ const img = data[i];
+
+ if(type === "panorama"){
+   await sb.from("bewertungen")
+     .update({ panorama: false })
+     .eq("nutzer_id", currentUser);
  }
 
- data[i][type]=!data[i][type];
- saveData(place,data);
+ const { data: existing } = await sb
+   .from("bewertungen")
+   .select("*")
+   .eq("bild_id", img.id)
+   .eq("nutzer_id", currentUser)
+   .single();
+
+ const newValue = !existing?.[type];
+
+ await sb.from("bewertungen").upsert({
+   bild_id: img.id,
+   nutzer_id: currentUser,
+   [type]: newValue
+ }, { onConflict: ["bild_id","nutzer_id"] });
+
  render(place);
 }
 
