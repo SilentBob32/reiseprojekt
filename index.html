@@ -41,6 +41,23 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
 
 .favorite.active {color:#f4c542}
 .panorama.active {color:#3b82f6}
+
+.deleteBtn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.card {
+  position: relative;
+}
 </style>
 
 </head>
@@ -287,15 +304,16 @@ async function render(place){
    pano.innerHTML="🌄 Panorama";
    pano.className="panorama"+(img.panorama?" active":"");
    pano.onclick=()=>toggle(place,i,"panorama");
-
-   const del=document.createElement("span");
-   del.innerHTML="✖ Löschen";
+   
+   const del=document.createElement("button");
+   del.innerHTML="✖";
+   del.className="deleteBtn";
    del.onclick=()=>removeImg(place,i);
 
    actions.appendChild(fav);
    actions.appendChild(pano);
-   actions.appendChild(del);
-
+   
+   card.appendChild(del);
    card.appendChild(a);
    card.appendChild(rating);
    card.appendChild(meta);
