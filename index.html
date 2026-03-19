@@ -113,7 +113,8 @@ function switchUser(){
 function key(place){return "bilder_"+place;}
 
 async function getData(place){
- const { data, error } = await sb
+
+ const { data: images, error } = await sb
    .from("bilder")
    .select("*")
    .eq("ort", place);
@@ -123,13 +124,34 @@ async function getData(place){
    return [];
  }
 
- return data.map(x => ({
-   url: x.url,
-   rating: 0,
-   favorite: false,
-   panorama: false,
-   id: x.id
- }));
+ const result = [];
+
+ for(const img of images){
+
+   const { data: ratings } = await sb
+     .from("bewertungen")
+     .select("*")
+     .eq("bild_id", img.id);
+
+   const userRating = ratings.find(r => r.nutzer_id === currentUser);
+
+   let avg = 0;
+   if(ratings.length > 0){
+     avg = ratings.reduce((a,b)=>a+b.rating,0) / ratings.length;
+   }
+
+   result.push({
+     url: img.url,
+     id: img.id,
+     rating: userRating?.rating || 0,
+     favorite: userRating?.favorite || false,
+     panorama: userRating?.panorama || false,
+     avg: avg,
+     count: ratings.length
+   });
+ }
+
+ return result;
 }
 
 function saveData(place,data){
