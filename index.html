@@ -316,28 +316,6 @@ if(panoBox){
   }
 }
 
-const data = await getData(place);
-
-// 👉 Panorama Gewinner holen
-const pano = getPanoramaWinner(data);
-
-const panoBox = document.getElementById(place + "_pano");
-
-if(panoBox){
-  panoBox.innerHTML = "";
-
-  if(pano){
-    const img = document.createElement("img");
-    img.src = pano.url;
-    img.style.width = "100%";
-    img.style.borderRadius = "6px";
-
-    panoBox.appendChild(img);
-  } else {
-    panoBox.innerHTML = "<div class='placeholder'>Kein Panorama gewählt</div>";
-  }
-}
-
 // 👉 Top 3 Highlights
 const highlights = getTopHighlights(data);
 
