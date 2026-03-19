@@ -130,6 +130,18 @@ function switchUser(){
  document.getElementById("userInfo").style.display="none";
 }
 
+function createSearchLinks(place){
+
+  const term = place.replace(/_/g, " ");
+
+  return `
+  🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=${term}" target="_blank">Wikimedia</a> |
+  🔎 <a href="https://www.pexels.com/search/${term}/" target="_blank">Pexels</a> |
+  🔎 <a href="https://unsplash.com/s/photos/${term}" target="_blank">Unsplash</a> |
+  🔎 <a href="https://www.google.com/search?tbm=isch&q=${term}" target="_blank">Google</a>
+  `;
+}
+
 function key(place){return "bilder_"+place;}
 
 async function getData(place){
@@ -263,6 +275,11 @@ async function removeImg(place,i){
 async function render(place){
  const g=document.getElementById(place+"_gallery");
  g.innerHTML="";
+ 
+ const linksBox = document.getElementById(place + "_links");
+if(linksBox){
+  linksBox.innerHTML = createSearchLinks(place);
+}
 
  const data = await getData(place);
 
@@ -353,10 +370,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Salzburg" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Salzburg/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Salzburg_links"></div>
 
 <input id="Salzburg_input" placeholder="Bildlink einfügen" oninput="previewImage('Salzburg')">
 <button onclick="addImage('Salzburg')">Hinzufügen</button>
@@ -383,10 +397,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Hamburg" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Hamburg/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Hamburg_links"></div>
 
 <input id="Hamburg_input" placeholder="Bildlink einfügen" oninput="previewImage('Hamburg')">
 <button onclick="addImage('Hamburg')">Hinzufügen</button>
@@ -413,10 +424,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Bratislava" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Bratislava/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Bratislava_links"></div>
 
 <input id="Bratislava_input" placeholder="Bildlink einfügen" oninput="previewImage('Bratislava')">
 <button onclick="addImage('Bratislava')">Hinzufügen</button>
@@ -443,10 +451,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Karlsbad" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Karlsbad/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Karlsbad_links"></div>
 
 <input id="Karlsbad_input" placeholder="Bildlink einfügen" oninput="previewImage('Karlsbad')">
 <button onclick="addImage('Karlsbad')">Hinzufügen</button>
@@ -473,10 +478,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Bad+Flinsberg" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Bad+Flinsberg/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Bad_Flinsberg_links"></div>
 
 <input id="Bad_Flinsberg_input" placeholder="Bildlink einfügen" oninput="previewImage('Bad_Flinsberg')">
 <button onclick="addImage('Bad_Flinsberg')">Hinzufügen</button>
@@ -503,10 +505,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Kirschau" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Kirschau/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Kirschau_links"></div>
 
 <input id="Kirschau_input" placeholder="Bildlink einfügen" oninput="previewImage('Kirschau')">
 <button onclick="addImage('Kirschau')">Hinzufügen</button>
@@ -533,10 +532,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Bad+Staffelstein" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Bad+Staffelstein/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Bad Staffelstein_links"></div>
 
 <input id="Bad_Staffelstein_input" placeholder="Bildlink einfügen" oninput="previewImage('Bad_Staffelstein')">
 <button onclick="addImage('Bad_Staffelstein')">Hinzufügen</button>
@@ -563,10 +559,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Weimar" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Weimar/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Weimar_links"></div>
 
 <input id="Weimar_input" placeholder="Bildlink einfügen" oninput="previewImage('Weimar')">
 <button onclick="addImage('Weimar')">Hinzufügen</button>
@@ -593,10 +586,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Erfurt" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Erfurt/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Erfurt_links"></div>
 
 <input id="Erfurt_input" placeholder="Bildlink einfügen" oninput="previewImage('Erfurt')">
 <button onclick="addImage('Erfurt')">Hinzufügen</button>
@@ -623,10 +613,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Dresden" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Dresden/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Dresden_links"></div>
 
 <input id="Dresden_input" placeholder="Bildlink einfügen" oninput="previewImage('Dresden')">
 <button onclick="addImage('Dresden')">Hinzufügen</button>
@@ -653,10 +640,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Breslau" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Breslau/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Breslau_links"></div>
 
 <input id="Breslau_input" placeholder="Bildlink einfügen" oninput="previewImage('Breslau')">
 <button onclick="addImage('Breslau')">Hinzufügen</button>
@@ -683,10 +667,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Prag" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Prag/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Prag_links"></div>
 
 <input id="Prag_input" placeholder="Bildlink einfügen" oninput="previewImage('Prag')">
 <button onclick="addImage('Prag')">Hinzufügen</button>
@@ -713,10 +694,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Nürnberg" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Nürnberg/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Nürnberg_links"></div>
 
 <input id="Nürnberg_input" placeholder="Bildlink einfügen" oninput="previewImage('Nürnberg')">
 <button onclick="addImage('Nürnberg')">Hinzufügen</button>
@@ -743,10 +721,7 @@ window.onload=initUsers;
 <div class="placeholder">Highlight</div>
 </div>
 
-<div class="searchLinks">
-🔎 <a href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=Wien" target="_blank">Wikimedia Bilder</a> |
-🔎 <a href="https://www.pexels.com/search/Wien/" target="_blank">Pexels Bilder</a>
-</div>
+<div class="searchLinks" id="Wien_links"></div>
 
 <input id="Wien_input" placeholder="Bildlink einfügen" oninput="previewImage('Wien')">
 <button onclick="addImage('Wien')">Hinzufügen</button>
