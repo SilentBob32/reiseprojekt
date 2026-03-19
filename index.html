@@ -63,7 +63,6 @@ Aktiver Nutzer: <b id="activeUser"></b>
 <script>
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
-let currentUser = null;
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
@@ -80,28 +79,11 @@ function initUsers(){
  });
 }
 
-async function setUser(){
-
- const name = document.getElementById("userDropdown").value;
-
- const { data, error } = await sb
-   .from("nutzer")
-   .select("id")
-   .eq("name", name)
-   .single();
-
- if(error || !data){
-   alert("Nutzer nicht gefunden in Datenbank");
-   console.error(error);
-   return;
- }
-
- currentUser = data.id;
-
- document.getElementById("activeUser").textContent = name;
- document.getElementById("userSelect").style.display = "none";
- document.getElementById("userInfo").style.display = "block";
-
+function setUser(){
+ const u=document.getElementById("userDropdown").value;
+ document.getElementById("activeUser").textContent=u;
+ document.getElementById("userSelect").style.display="none";
+ document.getElementById("userInfo").style.display="block";
  loadAll();
 }
 
@@ -165,7 +147,11 @@ async function addImage(place){
 
 function setRating(place,i,val){
  let data=getData(place);
- data[i].rating=val;
+ await sb.from("bewertungen").upsert({
+  bild_id: data[i].id,
+  nutzer_id: currentUser,
+  rating: val
+}, { onConflict: ["bild_id","nutzer_id"] });
  saveData(place,data);
  render(place);
 }
@@ -174,7 +160,9 @@ function toggle(place,i,type){
  let data=getData(place);
 
  if(type==="panorama"){
-   data.forEach(x=>x.panorama=false);
+   await sb.from("bewertungen")
+  .update({ panorama: false })
+  .eq("nutzer_id", currentUser);
  }
 
  data[i][type]=!data[i][type];
