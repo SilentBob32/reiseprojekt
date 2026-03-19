@@ -328,10 +328,17 @@ if(highlightBox){
 
     highlights.forEach(h => {
 
-      const img = document.createElement("img");
-      img.src = h.url;
-      img.style.width = "100%";
-      img.style.borderRadius = "6px";
+      const link = document.createElement("a");
+link.href = h.url;
+link.target = "_blank";
+
+const img = document.createElement("img");
+img.src = h.url;
+img.style.width = "100%";
+img.style.borderRadius = "6px";
+
+link.appendChild(img);
+highlightBox.appendChild(link);
 
       highlightBox.appendChild(img);
     });
