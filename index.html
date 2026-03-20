@@ -238,6 +238,39 @@ function previewImage(place){
  box.appendChild(img);
 }
 
+async function saveWinners(place){
+
+  const data = await getData(place);
+
+  const pano = getGlobalPanoramaWinner(data);
+  const highlights = getTopHighlights(data);
+
+  // alte Einträge löschen
+  await sb.from("gewinner").delete().eq("ort", place);
+
+  // Panorama speichern
+  if(pano){
+    await sb.from("gewinner").insert({
+      ort: place,
+      typ: "panorama",
+      bild_url: pano.url,
+      platz: 1
+    });
+  }
+
+  // Highlights speichern
+  for(let i=0;i<highlights.length;i++){
+    await sb.from("gewinner").insert({
+      ort: place,
+      typ: "highlight",
+      bild_url: highlights[i].url,
+      platz: i+1
+    });
+  }
+
+  alert("Gewinner gespeichert für " + place);
+}
+
 async function addImage(place){
  const url=document.getElementById(place+"_input").value;
  if(!url) return;
@@ -465,6 +498,8 @@ window.onload=initUsers;
 
 <input id="Salzburg_input" placeholder="Bildlink einfügen" oninput="previewImage('Salzburg')">
 <button onclick="addImage('Salzburg')">Hinzufügen</button>
+
+<button onclick="saveWinners('Salzburg')">🏆 Gewinner speichern</button>
 
 <div id="Salzburg_preview" class="preview"></div>
 
