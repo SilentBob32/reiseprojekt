@@ -72,10 +72,13 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
 
 <h1>Bildersuche Sven 50</h1>
 
+<button onclick="toggleMode()">🎁 Finalmodus</button>
+
 <div id="userSelect">
 <b>Nutzer auswählen:</b><br><br>
 <select id="userDropdown"></select>
 <button onclick="setUser()">Bestätigen</button>
+<button onclick="toggleMode()">🎁 Finalmodus</button>
 </div>
 
 <div id="userInfo" class="headerUser" style="display:none">
@@ -87,6 +90,7 @@ Aktiver Nutzer: <b id="activeUser"></b>
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
 let currentUser = null;
+let finalMode = false;
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
@@ -257,6 +261,47 @@ async function saveWinners(place){
       platz: 1
     });
   }
+
+async function loadWinners(place){
+
+  const { data, error } = await sb
+    .from("gewinner")
+    .select("*")
+    .eq("ort", place);
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  const pano = data.find(d => d.typ === "panorama");
+  const highlights = data
+    .filter(d => d.typ === "highlight")
+    .sort((a,b)=>a.platz - b.platz);
+
+  // Panorama anzeigen
+  const panoBox = document.getElementById(place + "_pano");
+  if(panoBox){
+    panoBox.innerHTML = pano
+      ? `<img src="${pano.bild_url}" style="width:100%;border-radius:8px">`
+      : "<div class='placeholder'>Kein Panorama</div>";
+  }
+
+  // Highlights anzeigen
+  const highlightBox = document.getElementById(place + "_highlights");
+  if(highlightBox){
+    highlightBox.innerHTML = "";
+
+    highlights.forEach(h => {
+      const img = document.createElement("img");
+      img.src = h.bild_url;
+      img.style.width = "100%";
+      img.style.borderRadius = "6px";
+
+      highlightBox.appendChild(img);
+    });
+  }
+}
 
   // Highlights speichern
   for(let i=0;i<highlights.length;i++){
@@ -472,6 +517,25 @@ async function loadAll(){
  for(const p of places){
    await render(p.replace(/ /g,"_"));
  }
+}
+
+function toggleMode(){
+
+  finalMode = !finalMode;
+
+  if(finalMode){
+    alert("Finalmodus aktiv");
+    loadAllFinal();
+  } else {
+    alert("Bearbeitungsmodus aktiv");
+    loadAll();
+  }
+}
+
+async function loadAllFinal(){
+  for(const p of places){
+    await loadWinners(p.replace(/ /g,"_"));
+  }
 }
 
 window.onload=initUsers;
