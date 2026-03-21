@@ -261,6 +261,19 @@ async function saveWinners(place){
     });
   }
 
+  // Highlights speichern
+  for(let i=0;i<highlights.length;i++){
+    await sb.from("gewinner").insert({
+      ort: place,
+      typ: "highlight",
+      bild_url: highlights[i].url,
+      platz: i+1
+    });
+  }
+
+  alert("Gewinner gespeichert für " + place);
+}
+
 async function loadWinners(place){
 
   const { data, error } = await sb
@@ -300,19 +313,6 @@ async function loadWinners(place){
       highlightBox.appendChild(img);
     });
   }
-}
-
-  // Highlights speichern
-  for(let i=0;i<highlights.length;i++){
-    await sb.from("gewinner").insert({
-      ort: place,
-      typ: "highlight",
-      bild_url: highlights[i].url,
-      platz: i+1
-    });
-  }
-
-  alert("Gewinner gespeichert für " + place);
 }
 
 async function addImage(place){
