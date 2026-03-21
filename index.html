@@ -315,6 +315,12 @@ async function loadWinners(place){
 }
 
 async function addImage(place){
+
+  if(finalMode){
+  alert("Finalmodus aktiv – keine Änderungen möglich");
+  return;
+  }
+
  const url=document.getElementById(place+"_input").value;
  if(!url) return;
 
@@ -331,6 +337,11 @@ async function addImage(place){
 
 async function setRating(place,i,val){
 
+if(finalMode){
+  alert("Finalmodus aktiv – keine Änderungen möglich");
+  return;
+}
+
  const data = await getData(place);
  const img = data[i];
 
@@ -344,6 +355,11 @@ async function setRating(place,i,val){
 }
 
 async function toggle(place,i,type){
+
+  if(finalMode){
+  alert("Finalmodus aktiv – keine Änderungen möglich");
+  return;
+}
 
  const data = await getData(place);
  const img = data[i];
@@ -373,6 +389,11 @@ async function toggle(place,i,type){
 }
 
 async function removeImg(place,i){
+
+  if(finalMode){
+  alert("Finalmodus aktiv – keine Änderungen möglich");
+  return;
+ }
 
  const data = await getData(place);
  const id = data[i].id;
