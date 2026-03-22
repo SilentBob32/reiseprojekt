@@ -121,6 +121,10 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
   transition: 0.2s;
 }
 
+details:first-of-type {
+  border: 2px solid #3b82f6;
+}
+
 </style>
 
 </head>
@@ -142,14 +146,6 @@ Aktiver Nutzer: <b id="activeUser"></b>
 <button onclick="switchUser()">Nutzer wechseln</button>
 </div>
 
-<details open>
-<summary><b>📂 Lokale Bilder</b></summary>
-
-<input type="file" accept="image/*" multiple onchange="handleLocalUpload(this)">
-<div id="local_preview" class="preview"></div>
-<div id="local_gallery" class="gallery"></div>
-
-</details>
 
 <script>
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
@@ -160,7 +156,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 const users = ['Jens', 'Simone', 'Stephan', 'Steffen', 'Nobody1', 'Nobody2', 'Nobody3'];
-const places = ['Salzburg', 'Hamburg', 'Bratislava', 'Karlsbad', 'Bad Flinsberg', 'Kirschau', 'Bad Staffelstein', 'Weimar', 'Erfurt', 'Dresden', 'Breslau', 'Prag', 'Nürnberg', 'Wien'];
+const places = ['LOCAL', 'Salzburg', 'Hamburg', 'Bratislava', 'Karlsbad', 'Bad Flinsberg', 'Kirschau', 'Bad Staffelstein', 'Weimar', 'Erfurt', 'Dresden', 'Breslau', 'Prag', 'Nürnberg', 'Wien'];
 
 function initUsers(){
  const dd=document.getElementById("userDropdown");
@@ -852,7 +848,6 @@ async function handleLocalUpload(input){
       .from("bilder")
       .getPublicUrl(fileName);
 
-    // 👉 spezieller Ort für lokale Bilder
     await sb.from("bilder").insert({
       url: publicUrl.publicUrl,
       ort: "LOCAL"
@@ -861,7 +856,7 @@ async function handleLocalUpload(input){
 
   input.value = "";
 
-  renderLocalGallery();
+  render("LOCAL");
 }
 
 async function renderLocalGallery(){
@@ -893,6 +888,28 @@ async function renderLocalGallery(){
 
 </script>
 
+<details>
+<summary>📂 Lokale Bilder</summary>
+
+<b>🌄 Panorama Gewinner</b>
+<div class="placeholderGrid" id="LOCAL_pano">
+<div class="placeholder">Panorama Platzhalter</div>
+</div>
+
+<b>⭐ Top Highlights</b>
+<div class="placeholderGrid" id="LOCAL_highlights">
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+<div class="placeholder">Highlight</div>
+</div>
+
+<input type="file" accept="image/*" multiple onchange="handleLocalUpload(this)">
+
+<div id="LOCAL_preview" class="preview"></div>
+
+<div id="LOCAL_gallery" class="gallery"></div>
+
+</details>
 
 <details>
 <summary>Salzburg</summary>
