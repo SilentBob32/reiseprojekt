@@ -121,10 +121,6 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
   transition: 0.2s;
 }
 
-details:first-of-type {
-  border: 2px solid #3b82f6;
-}
-
 </style>
 
 </head>
@@ -146,6 +142,14 @@ Aktiver Nutzer: <b id="activeUser"></b>
 <button onclick="switchUser()">Nutzer wechseln</button>
 </div>
 
+<details open>
+<summary><b>📂 Lokale Bilder</b></summary>
+
+<input type="file" accept="image/*" multiple onchange="handleLocalUpload(this)">
+<div id="local_preview" class="preview"></div>
+<div id="local_gallery" class="gallery"></div>
+
+</details>
 
 <script>
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
@@ -156,7 +160,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 
 const users = ['Jens', 'Simone', 'Stephan', 'Steffen', 'Nobody1', 'Nobody2', 'Nobody3'];
-const places = ['LOCAL', 'Salzburg', 'Hamburg', 'Bratislava', 'Karlsbad', 'Bad Flinsberg', 'Kirschau', 'Bad Staffelstein', 'Weimar', 'Erfurt', 'Dresden', 'Breslau', 'Prag', 'Nürnberg', 'Wien'];
+const places = ['Salzburg', 'Hamburg', 'Bratislava', 'Karlsbad', 'Bad Flinsberg', 'Kirschau', 'Bad Staffelstein', 'Weimar', 'Erfurt', 'Dresden', 'Breslau', 'Prag', 'Nürnberg', 'Wien'];
 
 function initUsers(){
  const dd=document.getElementById("userDropdown");
@@ -636,150 +640,6 @@ async function removeImg(place,i){
 }
 
 async function render(place){
- const g = document.getElementById(place+"_gallery");
- g.innerHTML = "";
- 
- const linksBox = document.getElementById(place + "_links");
- if(linksBox){
-  linksBox.innerHTML = createSearchLinks(place);
- }
-
- const data = await getData(place);
- 
- // 👉 Panorama Gewinner holen
- const pano = getGlobalPanoramaWinner(data);
-
- const panoBox = document.getElementById(place + "_pano");
-
- if(panoBox){
-  panoBox.innerHTML = "";
-
-  if(pano){
-    const img = document.createElement("img");
-    img.src = pano.url;
-    img.loading = "lazy";
-    img.onerror = () => img.src = "fallback.jpg";
-    img.style.width = "100%";
-    img.style.borderRadius = "6px";
-
-    panoBox.appendChild(img);
-  } else {
-    panoBox.innerHTML = "<div class='placeholder'>Kein Panorama gewählt</div>";
-  }
- }
-
- // 👉 Top 3 Highlights
- const highlights = getTopHighlights(data);
-
- const highlightBox = document.getElementById(place + "_highlights");
-
- if(highlightBox){
-  highlightBox.innerHTML = "";
-
-  if(highlights.length > 0){
-
-    highlights.forEach(h => {
-
-      const link = document.createElement("a");
-      link.href = h.url;
-      link.target = "_blank";
-      
-      const img = document.createElement("img");
-      img.src = h.url;
-      img.loading = "lazy";
-      img.onerror = () => img.src = "fallback.jpg";
-      img.style.width = "100%";
-      img.style.borderRadius = "6px";
-    
-      link.appendChild(img);
-      highlightBox.appendChild(link);
-    });
-
-  } else {
-    highlightBox.innerHTML = "<div class='placeholder'>Noch keine Bewertungen</div>";
-  }
- }
-
- data.forEach((img,i)=>{
-
-   const card = document.createElement("div");
-   card.className = "card";
-
-   const a = document.createElement("a");
-   a.href = img.url;
-   a.target = "_blank";
-
-   const image = document.createElement("img");
-   image.src = img.url;
-   image.loading = "lazy";
-
-   image.onerror = () => {
-     image.src = "fallback.jpg";
-   };
-
-   // 👇 WICHTIG: LOCAL Klick-Verhalten
-   if(place === "LOCAL"){
-     image.style.cursor = "pointer";
-     image.onclick = (e) => {
-       e.preventDefault();
-       assignToPlace(img.id);
-     };
-   }
-
-   a.appendChild(image);
-
-   const rating = document.createElement("div");
-   rating.className = "rating";
-
-   for(let s=1;s<=5;s++){
-     const star = document.createElement("span");
-     star.innerHTML = "★";
-     star.className = "star" + (s<=img.rating ? " active":"");
-     star.onclick = () => setRating(place,i,s);
-     rating.appendChild(star);
-   }
-
-   const meta = document.createElement("div");
-   meta.className = "meta";
-
-   meta.innerHTML = `
-   Ø ${img.avg.toFixed(1)} (${img.count})
-   <span style="margin-left:10px">🌄 ${img.panoramaCount || 0}</span>
-   `;
-
-   const actions = document.createElement("div");
-   actions.className = "actions";
-
-   const fav = document.createElement("span");
-   fav.innerHTML = "★ Favorit";
-   fav.className = "favorite" + (img.favorite ? " active":"");
-   fav.onclick = () => toggle(place,i,"favorite");
-
-   const panoBtn = document.createElement("span");
-   panoBtn.innerHTML = "🌄 Panorama";
-   panoBtn.className = "panorama" + (img.panorama ? " active":"");
-   panoBtn.onclick = () => toggle(place,i,"panorama");
-   
-   const del = document.createElement("button");
-   del.innerHTML = "✖";
-   del.className = "deleteBtn";
-   del.onclick = () => removeImg(place,i);
-
-   actions.appendChild(fav);
-   actions.appendChild(panoBtn);
-   
-   card.appendChild(del);
-   card.appendChild(a);
-   card.appendChild(rating);
-   card.appendChild(meta);
-   card.appendChild(actions);
-
-   g.appendChild(card);
-
- });
-}
-
-
  const g=document.getElementById(place+"_gallery");
  g.innerHTML="";
  
@@ -962,7 +822,7 @@ async function loadAllFinal(){
 window.onload = () => {
   initUsers();
   updateModeButton();
-  render("LOCAL");
+  renderLocalGallery();
 };
 
 async function handleLocalUpload(input){
@@ -992,6 +852,7 @@ async function handleLocalUpload(input){
       .from("bilder")
       .getPublicUrl(fileName);
 
+    // 👉 spezieller Ort für lokale Bilder
     await sb.from("bilder").insert({
       url: publicUrl.publicUrl,
       ort: "LOCAL"
@@ -1000,34 +861,38 @@ async function handleLocalUpload(input){
 
   input.value = "";
 
-  render("LOCAL");
+  renderLocalGallery();
 }
 
+async function renderLocalGallery(){
+
+  const g = document.getElementById("local_gallery");
+  g.innerHTML = "";
+
+  const { data, error } = await sb
+    .from("bilder")
+    .select("*")
+    .eq("ort", "LOCAL");
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  data.forEach(img => {
+
+    const image = document.createElement("img");
+    image.src = img.url;
+    image.style.width = "100%";
+    image.style.borderRadius = "6px";
+    image.loading = "lazy";
+
+    g.appendChild(image);
+  });
+}
 
 </script>
 
-<details>
-<summary>📂 Lokale Bilder</summary>
-
-<b>🌄 Panorama Gewinner</b>
-<div class="placeholderGrid" id="LOCAL_pano">
-<div class="placeholder">Panorama Platzhalter</div>
-</div>
-
-<b>⭐ Top Highlights</b>
-<div class="placeholderGrid" id="LOCAL_highlights">
-<div class="placeholder">Highlight</div>
-<div class="placeholder">Highlight</div>
-<div class="placeholder">Highlight</div>
-</div>
-
-<input type="file" accept="image/*" multiple onchange="handleLocalUpload(this)">
-
-<div id="LOCAL_preview" class="preview"></div>
-
-<div id="LOCAL_gallery" class="gallery"></div>
-
-</details>
 
 <details>
 <summary>Salzburg</summary>
