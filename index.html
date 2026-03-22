@@ -716,7 +716,12 @@ highlights.forEach(h => {
 
    image.onerror = () => {
    image.src = "fallback.jpg";
-   };
+
+   if(place === "LOCAL"){
+   image.style.cursor = "pointer";
+   image.onclick = () => assignToPlace(img.id);
+   }
+  };
 
    a.appendChild(image);
 
@@ -859,6 +864,31 @@ async function handleLocalUpload(input){
   render("LOCAL");
 }
 
+async function assignToPlace(imageId){
+
+  const target = prompt("Zu welcher Stadt zuweisen?");
+
+  if(!target) return;
+
+  if(!places.includes(target)){
+    alert("Ungültige Stadt");
+    return;
+  }
+
+  if(target === "LOCAL"){
+    alert("Bild ist bereits lokal");
+    return;
+  }
+
+  await sb
+    .from("bilder")
+    .update({ ort: target })
+    .eq("id", imageId);
+
+  // neu laden
+  render("LOCAL");
+  render(target.replace(/ /g,"_"));
+}
 
 </script>
 
