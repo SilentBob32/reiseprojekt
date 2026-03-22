@@ -306,6 +306,8 @@ async function loadWinners(place){
     highlights.forEach(h => {
       const img = document.createElement("img");
       img.src = h.bild_url;
+      img.loading = "lazy";
+      img.onerror = () => img.src = "fallback.jpg";
       img.style.width = "100%";
       img.style.borderRadius = "6px";
 
@@ -428,6 +430,8 @@ if(panoBox){
   if(pano){
     const img = document.createElement("img");
     img.src = pano.url;
+    img.loading = "lazy";
+    img.onerror = () => img.src = "fallback.jpg";
     img.style.width = "100%";
     img.style.borderRadius = "6px";
 
@@ -455,6 +459,8 @@ highlights.forEach(h => {
       
     const img = document.createElement("img");
     img.src = h.url;
+    img.loading = "lazy";
+    img.onerror = () => img.src = "fallback.jpg";
     img.style.width = "100%";
     img.style.borderRadius = "6px";
     
@@ -478,6 +484,11 @@ highlights.forEach(h => {
 
    const image=document.createElement("img");
    image.src=img.url;
+   image.loading = "lazy";
+
+   image.onerror = () => {
+   image.src = "fallback.jpg";
+   };
 
    a.appendChild(image);
 
@@ -535,6 +546,7 @@ meta.innerHTML = `
 async function loadAll(){
  for(const p of places){
    await render(p.replace(/ /g,"_"));
+   await new Promise(r => setTimeout(r, 400));
  }
 }
 
