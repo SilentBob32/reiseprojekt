@@ -142,6 +142,15 @@ Aktiver Nutzer: <b id="activeUser"></b>
 <button onclick="switchUser()">Nutzer wechseln</button>
 </div>
 
+<details open>
+<summary><b>📂 Lokale Bilder</b></summary>
+
+<input type="file" accept="image/*" multiple onchange="handleLocalUpload(this)">
+<div id="local_preview" class="preview"></div>
+<div id="local_gallery" class="gallery"></div>
+
+</details>
+
 <script>
 const SUPABASE_URL = "https://gvbipujajoxdrolatbrw.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YmlwdWpham94ZHJvbGF0YnJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1ODk2MTAsImV4cCI6MjA4OTE2NTYxMH0.b_G8AmG31UKSpa_wfpJo-WZ7XDWHLoSwq3QxVG6L5ng";
@@ -813,7 +822,74 @@ async function loadAllFinal(){
 window.onload = () => {
   initUsers();
   updateModeButton();
+  renderLocalGallery();
 };
+
+async function handleLocalUpload(input){
+
+  if(finalMode){
+    alert("Finalmodus aktiv – keine Änderungen möglich");
+    return;
+  }
+
+  const files = input.files;
+  if(!files.length) return;
+
+  for(const file of files){
+
+    const fileName = "img_" + Date.now() + "_" + Math.random().toString(36).substr(2,5) + ".jpg";
+
+    const { error } = await sb.storage
+      .from("bilder")
+      .upload(fileName, file);
+
+    if(error){
+      console.error(error);
+      continue;
+    }
+
+    const { data: publicUrl } = sb.storage
+      .from("bilder")
+      .getPublicUrl(fileName);
+
+    // 👉 spezieller Ort für lokale Bilder
+    await sb.from("bilder").insert({
+      url: publicUrl.publicUrl,
+      ort: "LOCAL"
+    });
+  }
+
+  input.value = "";
+
+  renderLocalGallery();
+}
+
+async function renderLocalGallery(){
+
+  const g = document.getElementById("local_gallery");
+  g.innerHTML = "";
+
+  const { data, error } = await sb
+    .from("bilder")
+    .select("*")
+    .eq("ort", "LOCAL");
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  data.forEach(img => {
+
+    const image = document.createElement("img");
+    image.src = img.url;
+    image.style.width = "100%";
+    image.style.borderRadius = "6px";
+    image.loading = "lazy";
+
+    g.appendChild(image);
+  });
+}
 
 </script>
 
