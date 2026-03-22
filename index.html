@@ -71,6 +71,7 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
 <body>
 
 <h1>Bildersuche Sven 50</h1>
+<button onclick="migrateImages()">🔄 Bilder migrieren</button>
 <button id="modeBtn" onclick="toggleMode()">🎁 Finalmodus aktivieren</button>
 
 <div id="userSelect">
@@ -347,6 +348,43 @@ async function uploadImageToSupabase(imageUrl) {
     console.error("Upload fehlgeschlagen:", err);
     return null;
   }
+}
+
+async function migrateImages(){
+
+  const { data: images, error } = await sb
+    .from("bilder")
+    .select("*");
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  for(const img of images){
+
+    // 👉 nur externe Bilder migrieren
+    if(img.url.includes("supabase.co")) continue;
+
+    console.log("Migriere:", img.url);
+
+    const newUrl = await uploadImageToSupabase(img.url);
+
+    if(!newUrl){
+      console.warn("Fehlgeschlagen:", img.url);
+      continue;
+    }
+
+    await sb
+      .from("bilder")
+      .update({ url: newUrl })
+      .eq("id", img.id);
+
+    // 👉 kleine Pause gegen Rate Limits
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  alert("Migration abgeschlossen");
 }
 
 async function addImage(place){
