@@ -3,6 +3,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bildersuche Sven 50</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -64,6 +65,53 @@ button {padding:6px 12px;margin-left:6px;cursor:pointer}
 .card {
   position: relative;
 }
+
+@media (max-width: 600px) {
+
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  input {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  button {
+    width: 100%;
+    margin: 4px 0;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  body {
+    margin: 15px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  .card {
+    padding: 8px;
+  }
+
+  .rating {
+    font-size: 18px;
+  }
+
+}
+
 </style>
 
 </head>
