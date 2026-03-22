@@ -818,7 +818,7 @@ async function loadAllFinal(){
 window.onload = () => {
   initUsers();
   updateModeButton();
-  renderLocalGallery();
+  render("LOCAL");
 };
 
 async function handleLocalUpload(input){
@@ -859,32 +859,6 @@ async function handleLocalUpload(input){
   render("LOCAL");
 }
 
-async function renderLocalGallery(){
-
-  const g = document.getElementById("local_gallery");
-  g.innerHTML = "";
-
-  const { data, error } = await sb
-    .from("bilder")
-    .select("*")
-    .eq("ort", "LOCAL");
-
-  if(error){
-    console.error(error);
-    return;
-  }
-
-  data.forEach(img => {
-
-    const image = document.createElement("img");
-    image.src = img.url;
-    image.style.width = "100%";
-    image.style.borderRadius = "6px";
-    image.loading = "lazy";
-
-    g.appendChild(image);
-  });
-}
 
 </script>
 
