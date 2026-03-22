@@ -316,6 +316,39 @@ async function loadWinners(place){
   }
 }
 
+async function uploadImageToSupabase(imageUrl) {
+  try {
+    const response = await fetch(imageUrl);
+
+    if (!response.ok) {
+      throw new Error("Bild konnte nicht geladen werden");
+    }
+
+    const blob = await response.blob();
+
+    const fileName = "img_" + Date.now() + ".jpg";
+
+    const { data, error } = await sb.storage
+      .from("bilder")
+      .upload(fileName, blob);
+
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    const { data: publicUrl } = sb.storage
+      .from("bilder")
+      .getPublicUrl(fileName);
+
+    return publicUrl.publicUrl;
+
+  } catch (err) {
+    console.error("Upload fehlgeschlagen:", err);
+    return null;
+  }
+}
+
 async function addImage(place){
 
   if(finalMode){
@@ -326,8 +359,15 @@ async function addImage(place){
  const url=document.getElementById(place+"_input").value;
  if(!url) return;
 
+ const storedUrl = await uploadImageToSupabase(url);
+
+if(!storedUrl){
+  alert("Bild konnte nicht gespeichert werden");
+  return;
+}
+
  await sb.from("bilder").insert({
-   url: url,
+   url: storedUrl,
    ort: place
  });
 
