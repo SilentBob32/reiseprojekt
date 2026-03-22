@@ -230,15 +230,44 @@ function saveData(place,data){
 }
 
 function previewImage(place){
- const url=document.getElementById(place+"_input").value;
- const box=document.getElementById(place+"_preview");
- box.innerHTML="";
+ const url = document.getElementById(place+"_input").value;
+ const box = document.getElementById(place+"_preview");
+ box.innerHTML = "";
  if(!url) return;
 
- const img=document.createElement("img");
- img.src=url;
- img.onerror=()=>{box.innerHTML="⚠ Bild konnte nicht geladen werden";};
- box.appendChild(img);
+ const img = document.createElement("img");
+ img.src = url;
+
+ img.onload = () => {
+
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const mp = ((w * h) / 1000000).toFixed(1);
+
+  const info = document.createElement("div");
+  info.style.fontSize = "12px";
+  info.style.marginTop = "4px";
+
+  if(w < 800 || h < 500){
+    info.textContent = `⚠ Niedrige Auflösung (${w} x ${h} | ${mp} MP)`;
+    info.style.color = "red";
+
+  } else if(w > 2000 || h > 1500){
+    info.textContent = `⚠ Sehr große Bilddatei (${w} x ${h} | ${mp} MP)`;
+    info.style.color = "orange";
+
+  } else {
+    info.textContent = `✔ Gute Auflösung (${w} x ${h} | ${mp} MP)`;
+    info.style.color = "green";
+  }
+
+  box.appendChild(img);
+  box.appendChild(info);
+ };
+
+ img.onerror = () => {
+  box.innerHTML = "⚠ Bild konnte nicht geladen werden";
+ };
 }
 
 async function saveWinners(place){
